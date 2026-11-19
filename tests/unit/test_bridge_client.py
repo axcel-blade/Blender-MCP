@@ -54,11 +54,16 @@ async def test_connect_authenticates_before_read_loop():
         task.cancel = MagicMock()
         return task
 
-    with (
-        patch("blender_mcp.protocol.client.asyncio.open_connection", side_effect=fake_open_connection),
-        patch("blender_mcp.protocol.client.asyncio.create_task", side_effect=fake_create_task),
-        patch.object(client, "_authenticate", side_effect=fake_authenticate),
-    ):
+    open_conn = patch(
+        "blender_mcp.protocol.client.asyncio.open_connection",
+        side_effect=fake_open_connection,
+    )
+    create_task = patch(
+        "blender_mcp.protocol.client.asyncio.create_task",
+        side_effect=fake_create_task,
+    )
+    authenticate = patch.object(client, "_authenticate", side_effect=fake_authenticate)
+    with open_conn, create_task, authenticate:
         await client.connect()
 
     assert order[0] == "auth"
