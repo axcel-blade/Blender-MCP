@@ -15,9 +15,11 @@ permissions:
   pages: write
   id-token: write
 
+# Serialize deploys; never cancel an in-flight Pages deployment (deploy-pages
+# otherwise aborts with "The operation was canceled" when CD + push race).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
