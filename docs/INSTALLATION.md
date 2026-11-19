@@ -57,6 +57,8 @@ uv run blender-mcp install-addon
 
 ## Manual addon install
 
+Download `blender_mcp_addon-*.zip` from the [latest GitHub Release](https://github.com/axcel-blade/Blender-MCP/releases/latest), or pack from a clone:
+
 ```bash
 uv run blender-mcp pack-addon -o blender_mcp_addon.zip
 ```
