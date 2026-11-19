@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- 
+
+## [1.0.0] - 2026-11-19
+
+### Added
+
 - Initial Blender MCP server and Blender addon bridge
 - MCP tools for scene, objects, meshes, materials, modifiers, cameras, lights, rendering, screenshots, animation, collections, import/export, assets, and scripting
 - MCP resources and workflow prompts

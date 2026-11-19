@@ -3,7 +3,7 @@
 bl_info = {
     "name": "Blender MCP",
     "author": "AXCEL BLADE",
-    "version": (0, 1, 0),
+    "version": (1, 0, 0),
     "blender": (3, 6, 0),
     "location": "View3D > Sidebar > AI / MCP",
     "description": "Connect Blender to MCP-compatible AI clients over a local bridge",
@@ -11,7 +11,7 @@ bl_info = {
     "doc_url": "https://github.com/axcel-blade/Blender-MCP",
 }
 
-ADDON_VERSION = "0.1.0"
+ADDON_VERSION = "1.0.0"
 
 _modules = (
     "preferences",
