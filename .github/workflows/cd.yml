@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
   id-token: write
   pages: write
 
@@ -136,43 +137,15 @@ jobs:
       - build
       - github-release
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    defaults:
-      run:
-        working-directory: site
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.build.outputs.tag }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: pnpm
-          cache-dependency-path: site/pnpm-lock.yaml
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
-
-      - name: Build
-        run: pnpm build
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site/dist
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Dispatch Pages workflow on main
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          # github-pages env only allows branch refs (e.g. main), not tags.
+          # Release tags therefore cannot deploy Pages directly; refresh via Pages on main.
+          gh workflow run pages.yml \
+            --repo "${{ github.repository }}" \
+            --ref main
+          echo "Dispatched Pages workflow on main for ${{ needs.build.outputs.tag }}"
 
