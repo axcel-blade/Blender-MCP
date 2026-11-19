@@ -24,9 +24,11 @@ class VIEW3D_PT_blender_mcp(Panel):
 
         box = layout.box()
         box.label(text="Connection")
-        status = "RUNNING" if state.get("running") else "STOPPED"
+        status = "RUNNING" if bridge_server.is_server_alive() else "STOPPED"
         row = box.row()
         row.label(text=f"Status: {status}")
+        if state.get("running") and not bridge_server.is_server_alive():
+            box.label(text="Stale state — press Start to recover")
         if prefs:
             box.prop(prefs, "host")
             box.prop(prefs, "port")
