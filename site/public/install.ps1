@@ -1,6 +1,7 @@
-﻿# Blender MCP remote installer (Windows)
+# Blender MCP remote installer for Windows
 # Usage:
 #   irm https://axcel-blade.github.io/Blender-MCP/install.ps1 | iex
+# Save this file as UTF-8 without BOM. A BOM breaks irm|iex on Windows PowerShell 5.1.
 
 $ErrorActionPreference = "Stop"
 
@@ -12,7 +13,7 @@ $InstallDir = if ($env:BLENDER_MCP_HOME) {
     Join-Path $env:USERPROFILE "Blender-MCP"
 }
 
-Write-Host "Blender MCP installer (Windows)" -ForegroundColor Cyan
+Write-Host "Blender MCP installer for Windows" -ForegroundColor Cyan
 Write-Host "Install dir: $InstallDir"
 Write-Host "Branch:      $Branch"
 
@@ -50,6 +51,12 @@ function Ensure-Repo {
     Set-Location $InstallDir
 }
 
+function Save-JsonNoBom([string]$Path, $Object) {
+    $text = $Object | ConvertTo-Json -Depth 20
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($Path, $text + [Environment]::NewLine, $utf8NoBom)
+}
+
 function Add-McpServer([string]$ConfigPath, [string]$RepoRoot) {
     if (-not (Test-Path $ConfigPath)) { return $false }
     $backup = "$ConfigPath.blender-mcp.bak"
@@ -63,7 +70,7 @@ function Add-McpServer([string]$ConfigPath, [string]$RepoRoot) {
         args    = @("run", "--directory", "$RepoRoot", "blender-mcp")
     }
     $json.mcpServers | Add-Member -NotePropertyName blender -NotePropertyValue $entry -Force
-    $json | ConvertTo-Json -Depth 20 | Set-Content $ConfigPath -Encoding UTF8
+    Save-JsonNoBom $ConfigPath $json
     Write-Host "Updated $ConfigPath (backup: $backup)"
     return $true
 }
@@ -88,7 +95,7 @@ $claude = Join-Path $env:APPDATA "Claude\claude_desktop_config.json"
 
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Green
-Write-Host "1. Open Blender → Edit → Preferences → Add-ons → enable 'Blender MCP'"
-Write-Host "2. In the 3D Viewport press N → AI / MCP → Start"
+Write-Host "1. Open Blender -> Edit -> Preferences -> Add-ons -> enable 'Blender MCP'"
+Write-Host "2. In the 3D Viewport press N -> AI / MCP -> Start"
 Write-Host "3. Fully quit and reopen your MCP client (Cursor / Claude Desktop)"
 Write-Host "Done. Repo: $InstallDir"

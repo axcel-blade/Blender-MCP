@@ -74,6 +74,13 @@ jobs:
       - name: Build distributions
         run: uv build
 
+      - name: Pack Blender addon zip
+        run: |
+          VERSION="${{ steps.refs.outputs.tag }}"
+          VERSION="${VERSION#v}"
+          mkdir -p dist
+          uv run blender-mcp pack-addon -o "dist/blender_mcp_addon-${VERSION}.zip"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
