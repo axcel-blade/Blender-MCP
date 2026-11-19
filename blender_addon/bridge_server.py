@@ -34,6 +34,31 @@ def get_state() -> dict[str, Any]:
     return dict(_state)
 
 
+def is_server_alive() -> bool:
+    """True only when the accept loop thread is still alive and marked running."""
+    return bool(_state.get("running")) and _server_thread is not None and _server_thread.is_alive()
+
+
+def probe_listen(timeout: float = 0.5) -> dict[str, Any]:
+    """Attempt a real TCP connect to the configured bridge bind address/port."""
+    host = str(_state.get("host") or "127.0.0.1")
+    # Clients always connect to loopback when the addon binds 0.0.0.0.
+    connect_host = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
+    port = int(_state.get("port") or DEFAULT_PORT)
+    if not is_server_alive():
+        return {
+            "ok": False,
+            "host": connect_host,
+            "port": port,
+            "error": "Bridge server is not running",
+        }
+    try:
+        with socket.create_connection((connect_host, port), timeout=timeout):
+            return {"ok": True, "host": connect_host, "port": port, "error": ""}
+    except OSError as exc:
+        return {"ok": False, "host": connect_host, "port": port, "error": str(exc)}
+
+
 def log(message: str) -> None:
     entry = f"{time.strftime('%H:%M:%S')} {message}"
     logs = _state.setdefault("logs", [])
@@ -48,10 +73,43 @@ def _prefs():
     return get_preferences()
 
 
+def _mark_stopped(reason: str = "") -> None:
+    global _server_socket, _server_thread
+    _state["running"] = False
+    _state["clients"] = 0
+    if reason:
+        _state["last_error"] = reason
+        log(reason)
+    if _server_socket is not None:
+        try:
+            _server_socket.close()
+        except OSError:
+            pass
+    _server_socket = None
+    _server_thread = None
+
+
+def _ensure_handlers_registered() -> None:
+    try:
+        from .handlers import _REGISTRY, register as register_handlers
+
+        if not _REGISTRY:
+            register_handlers()
+        log(f"Bridge commands available: {len(_REGISTRY)}")
+    except Exception as exc:  # noqa: BLE001
+        log(f"Handler registration warning: {exc}")
+
+
 def start_server() -> dict[str, Any]:
     global _server_socket, _server_thread
-    if _state.get("running"):
+    _ensure_handlers_registered()
+    if is_server_alive():
         return {"success": True, "result": {"message": "Server already running", **get_state()}}
+
+    # Recover from a stale RUNNING flag left after the accept loop died.
+    if _state.get("running") or _server_socket is not None or _server_thread is not None:
+        log("Recovering stale bridge state before restart")
+        stop_server()
 
     prefs = _prefs()
     host = "127.0.0.1"
@@ -103,17 +161,27 @@ def stop_server() -> dict[str, Any]:
 
 def _serve_loop() -> None:
     assert _server_socket is not None
-    while not _stop_event.is_set():
-        try:
-            client, addr = _server_socket.accept()
-        except socket.timeout:
-            continue
-        except OSError:
-            break
-        log(f"Client connected from {addr}")
-        threading.Thread(
-            target=_handle_client, args=(client, addr), name=f"BlenderMCPClient-{addr}", daemon=True
-        ).start()
+    exit_reason = ""
+    try:
+        while not _stop_event.is_set():
+            try:
+                client, addr = _server_socket.accept()
+            except socket.timeout:
+                continue
+            except OSError as exc:
+                if not _stop_event.is_set():
+                    exit_reason = f"Accept loop stopped: {exc}"
+                break
+            log(f"Client connected from {addr}")
+            threading.Thread(
+                target=_handle_client, args=(client, addr), name=f"BlenderMCPClient-{addr}", daemon=True
+            ).start()
+    finally:
+        # Always clear RUNNING so Start / Connection Test reflect reality.
+        if _state.get("running") and not _stop_event.is_set():
+            _mark_stopped(exit_reason or "Accept loop exited unexpectedly")
+        elif _state.get("running"):
+            _state["running"] = False
 
 
 def _handle_client(client: socket.socket, addr: Any) -> None:
