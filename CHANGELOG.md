@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- 
+
+## [1.0.1] - 2026-11-19
+
 ### Fixed
 
 - Reload handler modules on addon register so commands work after disable/enable without restarting Blender
