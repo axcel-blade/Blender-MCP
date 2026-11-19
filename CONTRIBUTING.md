@@ -33,8 +33,30 @@ Open a pull request into **`develop`**.
 ```bash
 git checkout develop
 git checkout -b release/x.y.z
-# bump version, update CHANGELOG.md, final fixes
+# bump version in pyproject.toml + src/blender_mcp/__init__.py
+# update CHANGELOG.md, final fixes
 # PR into main and develop after release
+```
+
+### Cutting a release (Actions)
+
+Preferred: run **Release** (`.github/workflows/release.yml`) from the Actions tab:
+
+1. Choose branch `main` (Git Flow)
+2. Enter version without `v` (e.g. `0.1.1`)
+3. Workflow bumps `pyproject.toml` + `__version__`, updates `CHANGELOG.md`, tags `vX.Y.Z`, creates the GitHub Release, then dispatches **CD**
+
+**CD** (`.github/workflows/cd.yml`) builds wheels, attaches assets, refreshes Pages, and publishes to PyPI when repo variable `PUBLISH_PYPI=true` and secret `PYPI_API_TOKEN` are set.
+
+Optional: set secret `RELEASE_TOKEN` (PAT with `contents` + `actions`) so tag pushes and workflow dispatches always chain reliably.
+
+Manual tag alternative:
+
+```bash
+git checkout main
+git pull
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
 ### Hotfix workflow

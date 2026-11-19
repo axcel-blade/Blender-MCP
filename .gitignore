@@ -56,3 +56,10 @@ temp/
 # Installer backups
 *.bak
 *.mcp.bak
+
+# Astro site (pnpm)
+site/node_modules/
+site/dist/
+site/.astro/
+site/package-lock.json
+

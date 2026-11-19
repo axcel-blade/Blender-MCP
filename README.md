@@ -1,5 +1,15 @@
 # Blender MCP
 
+[![CI](https://github.com/axcel-blade/Blender-MCP/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/axcel-blade/Blender-MCP/actions/workflows/ci.yml)
+[![CD](https://github.com/axcel-blade/Blender-MCP/actions/workflows/cd.yml/badge.svg)](https://github.com/axcel-blade/Blender-MCP/actions/workflows/cd.yml)
+[![Latest release](https://img.shields.io/badge/release-v0.1.0-blue?logo=github)](https://github.com/axcel-blade/Blender-MCP/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-c4f82a)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![uv](https://img.shields.io/badge/packaging-uv-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
+[![Blender](https://img.shields.io/badge/Blender-3.6%2B%20%7C%204.x-E87D0D?logo=blender&logoColor=white)](https://www.blender.org/)
+[![MCP](https://img.shields.io/badge/protocol-MCP-555)](docs/ARCHITECTURE.md)
+[![Local only](https://img.shields.io/badge/bridge-localhost%20default-555)](SECURITY.md)
+
 Production-oriented **Model Context Protocol (MCP)** integration for Blender. AI clients (Claude Desktop, Cursor, VS Code, Codex, Windsurf, and others) can inspect scenes, model, shade, light, render, and visually verify work through a local bridge.
 
 This project is **not** affiliated with the Blender Foundation.
@@ -20,13 +30,23 @@ This project is **not** affiliated with the Blender Foundation.
 - [uv](https://docs.astral.sh/uv/) (required)
 - Blender 3.6+ (4.x recommended)
 
-## Quick start (Windows)
+## Quick start
+
+Install site (Astro / GitHub Pages): [axcel-blade.github.io/Blender-MCP](https://axcel-blade.github.io/Blender-MCP/)
+
+**Windows (PowerShell)** — one liner:
 
 ```powershell
-.\installers\windows\install.ps1
+irm https://axcel-blade.github.io/Blender-MCP/install.ps1 | iex
 ```
 
-Or manually with uv:
+**macOS / Linux:**
+
+```bash
+curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh | sh
+```
+
+Or from a local clone with uv:
 
 ```powershell
 uv sync
