@@ -1,0 +1,60 @@
+[bridge]
+host = "127.0.0.1"
+port = 9876
+auth_token = ""
+connection_timeout = 5.0
+request_timeout = 60.0
+retry_count = 3
+retry_delay = 0.5
+heartbeat_interval = 15.0
+allow_remote = false
+
+[security]
+safe_execution_mode = true
+script_permission = "restricted"  # restricted | confirmation | trusted
+confirm_destructive = true
+confirm_overwrite = true
+max_request_bytes = 1048576
+allowed_directories = []
+
+[screenshots]
+default_max_size = 1024
+format = "png"
+include_ui = false
+
+[render]
+max_samples = 128
+max_resolution_x = 1920
+max_resolution_y = 1080
+max_time_seconds = 300
+default_engine = "CYCLES"
+
+[tool_groups]
+scene = true
+objects = true
+meshes = true
+modifiers = true
+materials = true
+geometry_nodes = true
+cameras = true
+lighting = true
+rendering = true
+animation = true
+assets = true
+import_export = true
+collections = true
+screenshots = true
+scripting = true
+
+[providers]
+polyhaven = true
+sketchfab = false
+polypizza = false
+meshy = false
+tripo = false
+rodin = false
+hunyuan3d = false
+
+[logging]
+level = "INFO"
+file = ""

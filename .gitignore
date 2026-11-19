@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+config.toml
+*.pem
+*.key
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Blender
+*.blend1
+*.blend2
+
+# Logs / temp
+*.log
+tmp/
+temp/
+.cache/
+
+# Installer backups
+*.bak
+*.mcp.bak

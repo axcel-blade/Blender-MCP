@@ -1,0 +1,268 @@
+"""Async TCP bridge client talking to the Blender addon."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+from typing import Any
+
+from blender_mcp.config import BridgeConfig
+from blender_mcp.exceptions import (
+    AuthFailedError,
+    BlenderMCPError,
+    BlenderNotConnectedError,
+    ErrorCode,
+    TimeoutError_,
+)
+from blender_mcp.protocol.messages import BridgeRequest, BridgeResponse
+
+logger = logging.getLogger(__name__)
+
+
+class BlenderBridgeClient:
+    """Newline-delimited JSON client for the Blender addon bridge."""
+
+    def __init__(self, config: BridgeConfig) -> None:
+        self.config = config
+        self._reader: asyncio.StreamReader | None = None
+        self._writer: asyncio.StreamWriter | None = None
+        self._lock = asyncio.Lock()
+        self._pending: dict[str, asyncio.Future[BridgeResponse]] = {}
+        self._reader_task: asyncio.Task[None] | None = None
+        self._heartbeat_task: asyncio.Task[None] | None = None
+        self._connected = False
+        self._last_error: str | None = None
+        self._addon_info: dict[str, Any] = {}
+
+    @property
+    def connected(self) -> bool:
+        return self._connected and self._writer is not None
+
+    @property
+    def last_error(self) -> str | None:
+        return self._last_error
+
+    @property
+    def addon_info(self) -> dict[str, Any]:
+        return dict(self._addon_info)
+
+    async def connect(self) -> None:
+        if self.connected:
+            return
+        try:
+            self._reader, self._writer = await asyncio.wait_for(
+                asyncio.open_connection(self.config.host, self.config.port),
+                timeout=self.config.connection_timeout,
+            )
+        except (OSError, asyncio.TimeoutError) as exc:
+            self._connected = False
+            self._last_error = str(exc)
+            raise BlenderNotConnectedError(
+                f"Could not connect to Blender at {self.config.host}:{self.config.port}: {exc}"
+            ) from exc
+
+        self._connected = True
+        self._last_error = None
+        self._reader_task = asyncio.create_task(self._read_loop(), name="blender-bridge-reader")
+        await self._authenticate()
+        self._heartbeat_task = asyncio.create_task(
+            self._heartbeat_loop(), name="blender-bridge-heartbeat"
+        )
+        logger.info("Connected to Blender bridge %s:%s", self.config.host, self.config.port)
+
+    async def disconnect(self) -> None:
+        self._connected = False
+        for task in (self._heartbeat_task, self._reader_task):
+            if task is not None:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+        self._heartbeat_task = None
+        self._reader_task = None
+
+        if self._writer is not None:
+            try:
+                self._writer.close()
+                await self._writer.wait_closed()
+            except Exception:  # noqa: BLE001
+                pass
+        self._writer = None
+        self._reader = None
+
+        for fut in self._pending.values():
+            if not fut.done():
+                fut.set_exception(BlenderNotConnectedError("Disconnected from Blender"))
+        self._pending.clear()
+
+    async def ensure_connected(self) -> None:
+        if self.connected:
+            return
+        last_exc: Exception | None = None
+        for attempt in range(1, self.config.retry_count + 1):
+            try:
+                await self.connect()
+                return
+            except BlenderMCPError as exc:
+                last_exc = exc
+                logger.warning("Connect attempt %s failed: %s", attempt, exc)
+                await asyncio.sleep(self.config.retry_delay * attempt)
+        if last_exc:
+            raise last_exc
+        raise BlenderNotConnectedError()
+
+    async def send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | None = None,
+        *,
+        timeout: float | None = None,
+    ) -> dict[str, Any]:
+        await self.ensure_connected()
+        request = BridgeRequest(command=command, params=params or {})
+        timeout = timeout if timeout is not None else self.config.request_timeout
+
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[BridgeResponse] = loop.create_future()
+        self._pending[request.id] = future
+
+        try:
+            await self._write(request.to_dict())
+            response = await asyncio.wait_for(future, timeout=timeout)
+        except asyncio.TimeoutError as exc:
+            self._pending.pop(request.id, None)
+            self._last_error = f"Timeout waiting for {command}"
+            raise TimeoutError_(
+                f"Timed out waiting for Blender response to '{command}'",
+                details={"command": command, "request_id": request.id},
+            ) from exc
+        except BlenderMCPError:
+            self._pending.pop(request.id, None)
+            raise
+        except Exception as exc:  # noqa: BLE001
+            self._pending.pop(request.id, None)
+            self._last_error = str(exc)
+            raise BlenderMCPError(
+                f"Bridge communication failed: {exc}",
+                code=ErrorCode.CONNECTION_ERROR,
+                details={"command": command},
+            ) from exc
+
+        result = response.to_tool_result()
+        if not response.success:
+            code = ErrorCode(response.error_code) if response.error_code in ErrorCode else ErrorCode.OPERATION_FAILED
+            raise BlenderMCPError(
+                response.error or "Blender operation failed",
+                code=code,
+                details=response.details or {"command": command},
+            )
+        return result
+
+    async def ping(self) -> bool:
+        if not self.connected:
+            return False
+        try:
+            await self._write({"type": "ping", "id": BridgeRequest(command="ping").id})
+            return True
+        except Exception:  # noqa: BLE001
+            return False
+
+    async def diagnose(self) -> dict[str, Any]:
+        status: dict[str, Any] = {
+            "mcp_server": "ok",
+            "bridge_host": self.config.host,
+            "bridge_port": self.config.port,
+            "connected": self.connected,
+            "last_error": self._last_error,
+            "addon_info": self.addon_info,
+        }
+        try:
+            await self.ensure_connected()
+            result = await self.send_command("diagnose_blender_connection", {})
+            status["connected"] = True
+            status["blender"] = result.get("result", result)
+        except BlenderMCPError as exc:
+            status["connected"] = False
+            status["error_code"] = str(exc.code)
+            status["error"] = exc.message
+        return status
+
+    async def _authenticate(self) -> None:
+        await self._write({"type": "auth", "token": self.config.auth_token or ""})
+        assert self._reader is not None
+        try:
+            line = await asyncio.wait_for(
+                self._reader.readline(), timeout=self.config.connection_timeout
+            )
+        except asyncio.TimeoutError as exc:
+            await self.disconnect()
+            raise AuthFailedError("Timed out waiting for auth response") from exc
+
+        if not line:
+            await self.disconnect()
+            raise AuthFailedError("Connection closed during authentication")
+
+        data = json.loads(line.decode("utf-8"))
+        if not data.get("success", False):
+            await self.disconnect()
+            raise AuthFailedError(data.get("error") or "Authentication rejected")
+        self._addon_info = data.get("result") or {}
+
+    async def _write(self, payload: dict[str, Any]) -> None:
+        if self._writer is None:
+            raise BlenderNotConnectedError()
+        raw = (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8")
+        async with self._lock:
+            self._writer.write(raw)
+            await self._writer.drain()
+
+    async def _read_loop(self) -> None:
+        assert self._reader is not None
+        try:
+            while self._connected:
+                line = await self._reader.readline()
+                if not line:
+                    break
+                try:
+                    data = json.loads(line.decode("utf-8"))
+                except json.JSONDecodeError:
+                    logger.warning("Invalid JSON from Blender: %r", line[:200])
+                    continue
+                await self._handle_incoming(data)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            self._last_error = str(exc)
+            logger.error("Bridge reader error: %s", exc)
+        finally:
+            self._connected = False
+            for fut in list(self._pending.values()):
+                if not fut.done():
+                    fut.set_exception(BlenderNotConnectedError("Connection lost"))
+            self._pending.clear()
+
+    async def _handle_incoming(self, data: dict[str, Any]) -> None:
+        msg_type = data.get("type")
+        if msg_type == "pong":
+            return
+        if msg_type == "response":
+            response = BridgeResponse.from_dict(data)
+            future = self._pending.pop(response.id, None)
+            if future and not future.done():
+                future.set_result(response)
+            return
+        if msg_type == "status":
+            self._addon_info.update(data)
+            return
+        logger.debug("Unhandled bridge message type: %s", msg_type)
+
+    async def _heartbeat_loop(self) -> None:
+        try:
+            while self._connected:
+                await asyncio.sleep(self.config.heartbeat_interval)
+                if not await self.ping():
+                    logger.warning("Heartbeat ping failed")
+        except asyncio.CancelledError:
+            raise
