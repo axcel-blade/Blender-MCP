@@ -20,7 +20,18 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         set_active: bool = True,
     ) -> dict[str, Any]:
         """Create a camera."""
-        return await call_blender(ctx, "create_camera", {"name": name, "location": location, "rotation": rotation, "lens": lens, "set_active": set_active}, group="cameras")
+        return await call_blender(
+            ctx,
+            "create_camera",
+            {
+                "name": name,
+                "location": location,
+                "rotation": rotation,
+                "lens": lens,
+                "set_active": set_active,
+            },
+            group="cameras",
+        )
 
     @mcp.tool(name="modify_camera")
     async def modify_camera(
@@ -28,7 +39,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         settings: dict[str, Any],
     ) -> dict[str, Any]:
         """Modify camera settings."""
-        return await call_blender(ctx, "modify_camera", {"name": name, "settings": settings}, group="cameras")
+        return await call_blender(
+            ctx, "modify_camera", {"name": name, "settings": settings}, group="cameras"
+        )
 
     @mcp.tool(name="set_active_camera")
     async def set_active_camera(
@@ -43,7 +56,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         object_name: str,
     ) -> dict[str, Any]:
         """Point/focus a camera at an object."""
-        return await call_blender(ctx, "focus_camera_on_object", {"camera": camera, "object_name": object_name}, group="cameras")
+        return await call_blender(
+            ctx,
+            "focus_camera_on_object",
+            {"camera": camera, "object_name": object_name},
+            group="cameras",
+        )
 
     @mcp.tool(name="frame_objects")
     async def frame_objects(
@@ -51,7 +69,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         object_names: list[str] | None = None,
     ) -> dict[str, Any]:
         """Frame objects in a camera view."""
-        return await call_blender(ctx, "frame_objects", {"camera": camera, "object_names": object_names}, group="cameras")
+        return await call_blender(
+            ctx, "frame_objects", {"camera": camera, "object_names": object_names}, group="cameras"
+        )
 
     @mcp.tool(name="configure_camera_lens")
     async def configure_camera_lens(
@@ -61,7 +81,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         ortho_scale: float | None = None,
     ) -> dict[str, Any]:
         """Configure camera lens settings."""
-        return await call_blender(ctx, "configure_camera_lens", {"name": name, "lens": lens, "type": type, "ortho_scale": ortho_scale}, group="cameras")
+        return await call_blender(
+            ctx,
+            "configure_camera_lens",
+            {"name": name, "lens": lens, "type": type, "ortho_scale": ortho_scale},
+            group="cameras",
+        )
 
     @mcp.tool(name="configure_camera_depth_of_field")
     async def configure_camera_depth_of_field(
@@ -72,7 +97,18 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         fstop: float = 2.8,
     ) -> dict[str, Any]:
         """Configure camera depth of field."""
-        return await call_blender(ctx, "configure_camera_depth_of_field", {"name": name, "enabled": enabled, "focus_object": focus_object, "focus_distance": focus_distance, "fstop": fstop}, group="cameras")
+        return await call_blender(
+            ctx,
+            "configure_camera_depth_of_field",
+            {
+                "name": name,
+                "enabled": enabled,
+                "focus_object": focus_object,
+                "focus_distance": focus_distance,
+                "fstop": fstop,
+            },
+            group="cameras",
+        )
 
     @mcp.tool(name="camera_view")
     async def camera_view(
@@ -80,4 +116,3 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
     ) -> dict[str, Any]:
         """Return camera framing metadata for visual verification."""
         return await call_blender(ctx, "camera_view", {"name": name}, group="cameras")
-

@@ -18,7 +18,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Run a structured mesh edit operation on an object."""
-        return await call_blender(ctx, "edit_mesh", {"name": name, "operation": operation, "params": params or {}}, group="meshes")
+        return await call_blender(
+            ctx,
+            "edit_mesh",
+            {"name": name, "operation": operation, "params": params or {}},
+            group="meshes",
+        )
 
     @mcp.tool(name="extrude_mesh")
     async def extrude_mesh(
@@ -26,7 +31,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         offset: list[float] | None = None,
     ) -> dict[str, Any]:
         """Extrude selected mesh geometry (object-mode helper)."""
-        return await call_blender(ctx, "extrude_mesh", {"name": name, "offset": offset}, group="meshes")
+        return await call_blender(
+            ctx, "extrude_mesh", {"name": name, "offset": offset}, group="meshes"
+        )
 
     @mcp.tool(name="inset_faces")
     async def inset_faces(
@@ -34,7 +41,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         thickness: float = 0.1,
     ) -> dict[str, Any]:
         """Inset faces on a mesh object."""
-        return await call_blender(ctx, "inset_faces", {"name": name, "thickness": thickness}, group="meshes")
+        return await call_blender(
+            ctx, "inset_faces", {"name": name, "thickness": thickness}, group="meshes"
+        )
 
     @mcp.tool(name="bevel_mesh")
     async def bevel_mesh(
@@ -43,7 +52,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         segments: int = 1,
     ) -> dict[str, Any]:
         """Bevel mesh edges."""
-        return await call_blender(ctx, "bevel_mesh", {"name": name, "amount": amount, "segments": segments}, group="meshes")
+        return await call_blender(
+            ctx,
+            "bevel_mesh",
+            {"name": name, "amount": amount, "segments": segments},
+            group="meshes",
+        )
 
     @mcp.tool(name="subdivide_mesh")
     async def subdivide_mesh(
@@ -51,7 +65,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         cuts: int = 1,
     ) -> dict[str, Any]:
         """Subdivide mesh faces."""
-        return await call_blender(ctx, "subdivide_mesh", {"name": name, "cuts": cuts}, group="meshes")
+        return await call_blender(
+            ctx, "subdivide_mesh", {"name": name, "cuts": cuts}, group="meshes"
+        )
 
     @mcp.tool(name="merge_vertices")
     async def merge_vertices(
@@ -59,7 +75,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         distance: float = 0.0001,
     ) -> dict[str, Any]:
         """Merge vertices by distance."""
-        return await call_blender(ctx, "merge_vertices", {"name": name, "distance": distance}, group="meshes")
+        return await call_blender(
+            ctx, "merge_vertices", {"name": name, "distance": distance}, group="meshes"
+        )
 
     @mcp.tool(name="delete_geometry")
     async def delete_geometry(
@@ -67,7 +85,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         mode: str = "VERT",
     ) -> dict[str, Any]:
         """Delete mesh geometry components."""
-        return await call_blender(ctx, "delete_geometry", {"name": name, "mode": mode}, group="meshes")
+        return await call_blender(
+            ctx, "delete_geometry", {"name": name, "mode": mode}, group="meshes"
+        )
 
     @mcp.tool(name="fill_faces")
     async def fill_faces(
@@ -90,7 +110,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         mode: str = "SMOOTH",
     ) -> dict[str, Any]:
         """Apply remesh via modifier and apply it."""
-        return await call_blender(ctx, "remesh_mesh", {"name": name, "octree_depth": octree_depth, "mode": mode}, group="meshes")
+        return await call_blender(
+            ctx,
+            "remesh_mesh",
+            {"name": name, "octree_depth": octree_depth, "mode": mode},
+            group="meshes",
+        )
 
     @mcp.tool(name="decimate_mesh")
     async def decimate_mesh(
@@ -98,7 +123,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         ratio: float = 0.5,
     ) -> dict[str, Any]:
         """Decimate a mesh."""
-        return await call_blender(ctx, "decimate_mesh", {"name": name, "ratio": ratio}, group="meshes")
+        return await call_blender(
+            ctx, "decimate_mesh", {"name": name, "ratio": ratio}, group="meshes"
+        )
 
     @mcp.tool(name="smooth_mesh")
     async def smooth_mesh(
@@ -107,7 +134,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         repeat: int = 1,
     ) -> dict[str, Any]:
         """Smooth mesh vertices."""
-        return await call_blender(ctx, "smooth_mesh", {"name": name, "factor": factor, "repeat": repeat}, group="meshes")
+        return await call_blender(
+            ctx, "smooth_mesh", {"name": name, "factor": factor, "repeat": repeat}, group="meshes"
+        )
 
     @mcp.tool(name="recalculate_normals")
     async def recalculate_normals(
@@ -115,7 +144,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         inside: bool = False,
     ) -> dict[str, Any]:
         """Recalculate mesh normals."""
-        return await call_blender(ctx, "recalculate_normals", {"name": name, "inside": inside}, group="meshes")
+        return await call_blender(
+            ctx, "recalculate_normals", {"name": name, "inside": inside}, group="meshes"
+        )
 
     @mcp.tool(name="mesh_cleanup")
     async def mesh_cleanup(
@@ -123,4 +154,3 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
     ) -> dict[str, Any]:
         """Run common mesh cleanup operations."""
         return await call_blender(ctx, "mesh_cleanup", {"name": name}, group="meshes")
-

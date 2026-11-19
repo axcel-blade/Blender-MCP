@@ -20,7 +20,18 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         color: list[float] | None = None,
     ) -> dict[str, Any]:
         """Create a light."""
-        return await call_blender(ctx, "create_light", {"light_type": light_type, "name": name, "location": location, "energy": energy, "color": color}, group="lighting")
+        return await call_blender(
+            ctx,
+            "create_light",
+            {
+                "light_type": light_type,
+                "name": name,
+                "location": location,
+                "energy": energy,
+                "color": color,
+            },
+            group="lighting",
+        )
 
     @mcp.tool(name="modify_light")
     async def modify_light(
@@ -28,7 +39,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         settings: dict[str, Any],
     ) -> dict[str, Any]:
         """Modify light settings."""
-        return await call_blender(ctx, "modify_light", {"name": name, "settings": settings}, group="lighting")
+        return await call_blender(
+            ctx, "modify_light", {"name": name, "settings": settings}, group="lighting"
+        )
 
     @mcp.tool(name="delete_light")
     async def delete_light(
@@ -36,7 +49,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         confirmed: bool = False,
     ) -> dict[str, Any]:
         """Delete a light object."""
-        return await call_blender(ctx, "delete_light", {"name": name, "confirmed": confirmed}, group="lighting")
+        return await call_blender(
+            ctx, "delete_light", {"name": name, "confirmed": confirmed}, group="lighting"
+        )
 
     @mcp.tool(name="get_light_info")
     async def get_light_info(
@@ -51,5 +66,6 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         target: str | None = None,
     ) -> dict[str, Any]:
         """Create a lighting preset (three_point, studio, product, outdoor, interior, cinematic)."""
-        return await call_blender(ctx, "create_lighting_setup", {"preset": preset, "target": target}, group="lighting")
-
+        return await call_blender(
+            ctx, "create_lighting_setup", {"preset": preset, "target": target}, group="lighting"
+        )

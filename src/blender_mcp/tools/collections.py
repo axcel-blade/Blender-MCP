@@ -17,7 +17,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         parent: str | None = None,
     ) -> dict[str, Any]:
         """Create a collection."""
-        return await call_blender(ctx, "create_collection", {"name": name, "parent": parent}, group="collections")
+        return await call_blender(
+            ctx, "create_collection", {"name": name, "parent": parent}, group="collections"
+        )
 
     @mcp.tool(name="delete_collection")
     async def delete_collection(
@@ -25,7 +27,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         confirmed: bool = False,
     ) -> dict[str, Any]:
         """Delete a collection."""
-        return await call_blender(ctx, "delete_collection", {"name": name, "confirmed": confirmed}, group="collections")
+        return await call_blender(
+            ctx, "delete_collection", {"name": name, "confirmed": confirmed}, group="collections"
+        )
 
     @mcp.tool(name="rename_collection")
     async def rename_collection(
@@ -33,7 +37,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         new_name: str,
     ) -> dict[str, Any]:
         """Rename a collection."""
-        return await call_blender(ctx, "rename_collection", {"name": name, "new_name": new_name}, group="collections")
+        return await call_blender(
+            ctx, "rename_collection", {"name": name, "new_name": new_name}, group="collections"
+        )
 
     @mcp.tool(name="move_object_to_collection")
     async def move_object_to_collection(
@@ -42,7 +48,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         exclusive: bool = True,
     ) -> dict[str, Any]:
         """Move an object into a collection."""
-        return await call_blender(ctx, "move_object_to_collection", {"object_name": object_name, "collection": collection, "exclusive": exclusive}, group="collections")
+        return await call_blender(
+            ctx,
+            "move_object_to_collection",
+            {"object_name": object_name, "collection": collection, "exclusive": exclusive},
+            group="collections",
+        )
 
     @mcp.tool(name="get_collection_info")
     async def get_collection_info(
@@ -56,7 +67,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         structure: dict[str, list[str]] | None = None,
     ) -> dict[str, Any]:
         """Organize objects into logical collections."""
-        return await call_blender(ctx, "organize_scene", {"structure": structure}, group="collections")
+        return await call_blender(
+            ctx, "organize_scene", {"structure": structure}, group="collections"
+        )
 
     @mcp.tool(name="create_hierarchy")
     async def create_hierarchy(
@@ -64,4 +77,3 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
     ) -> dict[str, Any]:
         """Create nested collections by path names."""
         return await call_blender(ctx, "create_hierarchy", {"names": names}, group="collections")
-

@@ -19,7 +19,17 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         settings: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Add a modifier to an object."""
-        return await call_blender(ctx, "add_modifier", {"name": name, "modifier_type": modifier_type, "modifier_name": modifier_name, "settings": settings or {}}, group="modifiers")
+        return await call_blender(
+            ctx,
+            "add_modifier",
+            {
+                "name": name,
+                "modifier_type": modifier_type,
+                "modifier_name": modifier_name,
+                "settings": settings or {},
+            },
+            group="modifiers",
+        )
 
     @mcp.tool(name="remove_modifier")
     async def remove_modifier(
@@ -27,7 +37,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         modifier_name: str,
     ) -> dict[str, Any]:
         """Remove a modifier from an object."""
-        return await call_blender(ctx, "remove_modifier", {"name": name, "modifier_name": modifier_name}, group="modifiers")
+        return await call_blender(
+            ctx,
+            "remove_modifier",
+            {"name": name, "modifier_name": modifier_name},
+            group="modifiers",
+        )
 
     @mcp.tool(name="modify_modifier")
     async def modify_modifier(
@@ -36,7 +51,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         settings: dict[str, Any],
     ) -> dict[str, Any]:
         """Update modifier settings."""
-        return await call_blender(ctx, "modify_modifier", {"name": name, "modifier_name": modifier_name, "settings": settings}, group="modifiers")
+        return await call_blender(
+            ctx,
+            "modify_modifier",
+            {"name": name, "modifier_name": modifier_name, "settings": settings},
+            group="modifiers",
+        )
 
     @mcp.tool(name="apply_modifier")
     async def apply_modifier(
@@ -44,7 +64,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         modifier_name: str,
     ) -> dict[str, Any]:
         """Apply a modifier."""
-        return await call_blender(ctx, "apply_modifier", {"name": name, "modifier_name": modifier_name}, group="modifiers")
+        return await call_blender(
+            ctx, "apply_modifier", {"name": name, "modifier_name": modifier_name}, group="modifiers"
+        )
 
     @mcp.tool(name="list_modifiers")
     async def list_modifiers(
@@ -52,4 +74,3 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
     ) -> dict[str, Any]:
         """List modifiers on an object with settings."""
         return await call_blender(ctx, "list_modifiers", {"name": name}, group="modifiers")
-

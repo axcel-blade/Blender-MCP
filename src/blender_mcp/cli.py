@@ -122,7 +122,9 @@ def build_parser() -> argparse.ArgumentParser:
     diag_p = sub.add_parser("diagnose", help="Diagnose Blender bridge connectivity")
     diag_p.set_defaults(func=cmd_diagnose)
 
-    inst_p = sub.add_parser("install-addon", help="Install the Blender addon into detected Blender paths")
+    inst_p = sub.add_parser(
+        "install-addon", help="Install the Blender addon into detected Blender paths"
+    )
     inst_p.add_argument("--target", help="Explicit Blender addons directory")
     inst_p.set_defaults(func=cmd_install_addon)
 

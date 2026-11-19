@@ -275,7 +275,9 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
                 "tripo": providers.get("tripo", False),
                 "rodin": providers.get("rodin", False),
                 "hunyuan3d": providers.get("hunyuan3d", False),
-                "tool_groups": ToolGroupsConfig(**tool_groups) if tool_groups else ToolGroupsConfig(),
+                "tool_groups": ToolGroupsConfig(**tool_groups)
+                if tool_groups
+                else ToolGroupsConfig(),
             }
         )
 

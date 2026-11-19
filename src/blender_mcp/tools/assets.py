@@ -61,7 +61,7 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
             download = await provider.download(
                 asset_id, asset_type=asset_type, resolution=resolution
             )
-            # Blender-side import for Poly Haven / others is handled via execute path when path known.
+            # Blender-side import for Poly Haven / others uses execute when path known.
             # Return download info so the AI or a follow-up import_asset call can proceed.
             return ok(
                 {

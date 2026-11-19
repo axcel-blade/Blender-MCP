@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 from typing import Any
@@ -55,7 +56,7 @@ class BlenderBridgeClient:
                 asyncio.open_connection(self.config.host, self.config.port),
                 timeout=self.config.connection_timeout,
             )
-        except (OSError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, OSError) as exc:
             self._connected = False
             self._last_error = str(exc)
             raise BlenderNotConnectedError(
@@ -76,10 +77,8 @@ class BlenderBridgeClient:
         for task in (self._heartbeat_task, self._reader_task):
             if task is not None:
                 task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await task
-                except asyncio.CancelledError:
-                    pass
         self._heartbeat_task = None
         self._reader_task = None
 
@@ -131,7 +130,7 @@ class BlenderBridgeClient:
         try:
             await self._write(request.to_dict())
             response = await asyncio.wait_for(future, timeout=timeout)
-        except asyncio.TimeoutError as exc:
+        except TimeoutError as exc:
             self._pending.pop(request.id, None)
             self._last_error = f"Timeout waiting for {command}"
             raise TimeoutError_(
@@ -152,7 +151,11 @@ class BlenderBridgeClient:
 
         result = response.to_tool_result()
         if not response.success:
-            code = ErrorCode(response.error_code) if response.error_code in ErrorCode else ErrorCode.OPERATION_FAILED
+            code = (
+                ErrorCode(response.error_code)
+                if response.error_code in ErrorCode
+                else ErrorCode.OPERATION_FAILED
+            )
             raise BlenderMCPError(
                 response.error or "Blender operation failed",
                 code=code,
@@ -196,7 +199,7 @@ class BlenderBridgeClient:
             line = await asyncio.wait_for(
                 self._reader.readline(), timeout=self.config.connection_timeout
             )
-        except asyncio.TimeoutError as exc:
+        except TimeoutError as exc:
             await self.disconnect()
             raise AuthFailedError("Timed out waiting for auth response") from exc
 

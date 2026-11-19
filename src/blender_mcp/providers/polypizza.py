@@ -38,7 +38,9 @@ class PolyPizzaProvider(AssetProvider):
         self, query: str, *, asset_type: str | None = None, limit: int = 10
     ) -> list[dict[str, Any]]:
         if not self.enabled:
-            raise BlenderMCPError("Poly Pizza provider is disabled", code=ErrorCode.PERMISSION_DENIED)
+            raise BlenderMCPError(
+                "Poly Pizza provider is disabled", code=ErrorCode.PERMISSION_DENIED
+            )
         params = {"search": query, "limit": str(limit)}
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(f"{API}/search", params=params, headers=self._headers())
@@ -61,7 +63,9 @@ class PolyPizzaProvider(AssetProvider):
         self, asset_id: str, *, asset_type: str | None = None, resolution: str = "1k"
     ) -> dict[str, Any]:
         if not self.enabled:
-            raise BlenderMCPError("Poly Pizza provider is disabled", code=ErrorCode.PERMISSION_DENIED)
+            raise BlenderMCPError(
+                "Poly Pizza provider is disabled", code=ErrorCode.PERMISSION_DENIED
+            )
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.get(f"{API}/model/{asset_id}", headers=self._headers())

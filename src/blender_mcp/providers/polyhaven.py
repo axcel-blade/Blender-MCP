@@ -22,7 +22,9 @@ class PolyHavenProvider(AssetProvider):
         self, query: str, *, asset_type: str | None = None, limit: int = 10
     ) -> list[dict[str, Any]]:
         if not self.enabled:
-            raise BlenderMCPError("Poly Haven provider is disabled", code=ErrorCode.PERMISSION_DENIED)
+            raise BlenderMCPError(
+                "Poly Haven provider is disabled", code=ErrorCode.PERMISSION_DENIED
+            )
         params: dict[str, str] = {}
         if asset_type:
             params["type"] = asset_type
@@ -61,7 +63,9 @@ class PolyHavenProvider(AssetProvider):
         self, asset_id: str, *, asset_type: str | None = None, resolution: str = "1k"
     ) -> dict[str, Any]:
         if not self.enabled:
-            raise BlenderMCPError("Poly Haven provider is disabled", code=ErrorCode.PERMISSION_DENIED)
+            raise BlenderMCPError(
+                "Poly Haven provider is disabled", code=ErrorCode.PERMISSION_DENIED
+            )
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 info = await client.get(f"{API}/info/{asset_id}")
