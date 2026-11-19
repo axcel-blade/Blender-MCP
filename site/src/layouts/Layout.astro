@@ -1,0 +1,75 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "Blender MCP",
+  description = "Install Blender MCP — connect AI clients to Blender over the Model Context Protocol.",
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #101418;
+    --fg: #f2f4f6;
+    --muted: #a7b0b8;
+    --accent: #e87d0d;
+    --accent-soft: rgba(232, 125, 13, 0.16);
+    --card: #171c22;
+    --code: #0c1014;
+    --border: #2b333c;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: "Source Sans 3", system-ui, sans-serif;
+    color: var(--fg);
+    background:
+      radial-gradient(900px 480px at 12% -8%, #3a220c 0%, transparent 55%),
+      radial-gradient(700px 420px at 100% 0%, #1a2733 0%, transparent 45%),
+      var(--bg);
+    line-height: 1.55;
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  code,
+  pre {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+</style>

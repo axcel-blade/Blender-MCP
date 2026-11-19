@@ -1,0 +1,76 @@
+[project]
+name = "blender-mcp"
+version = "0.1.0"
+description = "Production-quality Blender Model Context Protocol (MCP) server and addon"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "AXCEL BLADE" },
+]
+keywords = ["blender", "mcp", "3d", "ai", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+]
+dependencies = [
+    "mcp>=1.6.0,<2",
+    "httpx>=0.27.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.6.0",
+    "pyright>=1.1.380",
+]
+
+[project.scripts]
+blender-mcp = "blender_mcp.cli:main"
+
+[tool.uv]
+default-groups = ["dev"]
+
+[project.urls]
+Homepage = "https://github.com/axcel-blade/Blender-MCP"
+Issues = "https://github.com/axcel-blade/Blender-MCP/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/blender_mcp"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/blender_mcp" = "blender_mcp"
+
+[tool.hatch.build.targets.wheel.force-include]
+"blender_addon" = "blender_mcp/bundled_addon"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "blender_addon"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
