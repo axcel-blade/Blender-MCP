@@ -39,10 +39,18 @@ class BLENDERMCP_OT_test_connection(Operator):
 
     def execute(self, context):
         state = bridge_server.get_state()
-        if state.get("running"):
+        probe = bridge_server.probe_listen()
+        if probe.get("ok"):
             self.report(
                 {"INFO"},
-                f"Listening on {state.get('host')}:{state.get('port')} — clients={state.get('clients')}",
+                f"Listening on {probe.get('host')}:{probe.get('port')} — clients={state.get('clients')}",
+            )
+            return {"FINISHED"}
+
+        if bridge_server.is_server_alive():
+            self.report(
+                {"WARNING"},
+                f"Bridge marked running but TCP probe failed: {probe.get('error') or 'unknown'}",
             )
         else:
             self.report({"WARNING"}, "Bridge server is not running")

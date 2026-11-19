@@ -60,13 +60,16 @@ class BlenderBridgeClient:
             self._connected = False
             self._last_error = str(exc)
             raise BlenderNotConnectedError(
-                f"Could not connect to Blender at {self.config.host}:{self.config.port}: {exc}"
+                f"Could not connect to Blender at {self.config.host}:{self.config.port}: {exc}. "
+                "Open Blender, enable the Blender MCP addon, and confirm the AI / MCP panel shows RUNNING."
             ) from exc
 
         self._connected = True
         self._last_error = None
-        self._reader_task = asyncio.create_task(self._read_loop(), name="blender-bridge-reader")
+        # Authenticate before starting the shared reader so the auth reply
+        # cannot be stolen by `_read_loop` (empty-id responses are not pending).
         await self._authenticate()
+        self._reader_task = asyncio.create_task(self._read_loop(), name="blender-bridge-reader")
         self._heartbeat_task = asyncio.create_task(
             self._heartbeat_loop(), name="blender-bridge-heartbeat"
         )
@@ -151,11 +154,12 @@ class BlenderBridgeClient:
 
         result = response.to_tool_result()
         if not response.success:
-            code = (
-                ErrorCode(response.error_code)
-                if response.error_code in ErrorCode
-                else ErrorCode.OPERATION_FAILED
-            )
+            code = ErrorCode.OPERATION_FAILED
+            if response.error_code:
+                try:
+                    code = ErrorCode(response.error_code)
+                except ValueError:
+                    code = ErrorCode.OPERATION_FAILED
             raise BlenderMCPError(
                 response.error or "Blender operation failed",
                 code=code,

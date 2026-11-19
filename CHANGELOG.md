@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
+### Fixed
 
-- 
+- Reload handler modules on addon register so commands work after disable/enable without restarting Blender
+- Clear stale bridge RUNNING state when the accept loop exits; Start recovers automatically
+- Authenticate the TCP client before starting the shared reader (avoids auth/read race)
+- Handle `ErrorCode` membership correctly on Python 3.11+ (`StrEnum`)
+- Connection Test now probes TCP instead of only reading in-memory state
 
 ## [1.0.0] - 2026-11-19
 
