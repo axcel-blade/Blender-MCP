@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/axcel-blade/Blender-MCP/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/axcel-blade/Blender-MCP/actions/workflows/ci.yml)
 [![CD](https://github.com/axcel-blade/Blender-MCP/actions/workflows/cd.yml/badge.svg)](https://github.com/axcel-blade/Blender-MCP/actions/workflows/cd.yml)
-[![Latest release](https://img.shields.io/badge/release-v1.0.0-blue?logo=github)](https://github.com/axcel-blade/Blender-MCP/releases)
+[![Latest release](https://img.shields.io/github/v/release/axcel-blade/Blender-MCP?display_name=tag&logo=github)](https://github.com/axcel-blade/Blender-MCP/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-c4f82a)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/packaging-uv-DE5FE9?logo=uv&logoColor=white)](https://docs.astral.sh/uv/)
