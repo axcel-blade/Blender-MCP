@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-REPO_URL="https://github.com/axcel-blade/Blender-MCP.git"
+REPO_URL="${BLENDER_MCP_REPO:-https://github.com/axcel-blade/Blender-MCP.git}"
 BRANCH="${BLENDER_MCP_BRANCH:-develop}"
 INSTALL_DIR="${BLENDER_MCP_HOME:-$HOME/Blender-MCP}"
 
