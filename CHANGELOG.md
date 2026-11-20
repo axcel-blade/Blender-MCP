@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-20
+
+### Added
+
+- `lookup_api` (core tool): looks up the Blender Python API in the user's running Blender, so names match their version. Covers types and members (including add-on property groups such as `CyclesRenderSettings`), enum values filled in at runtime (render engines, view transforms), operator arguments, node input/output sockets, Python modules and functions, and word search.
+- Manual-edit reporting: changes made in Blender outside the AI's commands (objects added, removed, moved or edited; materials, modifiers, mesh counts; selection, active object, mode, frame) are returned once as `user_edits` on the next reply. New addon preference **Report manual edits** (on by default).
+- Per-command timeouts: `execute_blender_code` honours its `timeout` argument, `[bridge.command_timeouts]` in `config.toml` overrides individual commands, and renders, imports, exports and file operations get longer defaults (120–1800s, max 3600s).
+- Bridge integration tests over real TCP sockets: large payloads, split multi-byte UTF-8, concurrent and out-of-order replies, bad input and dropped connections.
+
+### Changed
+
+- **Safe execution mode** (on by default) now checks scripts before they run and refuses ones that start programs, delete files, use the network, register classes/handlers/timers, change add-ons or preferences, quit or reset Blender, or use `eval`/`exec`/`__import__`/`importlib`. Each refusal names its line. Turn the mode off in the addon preferences if a script really needs one of these. It is a safety net, not a sandbox.
+- Timeout errors say whether the command was cancelled before it started (nothing changed) or is still running in Blender (check the scene before retrying).
+- `get_addon_status` warns when the installed addon lacks `lookup_api`. Reinstall it with `blender-mcp install-addon`.
+
+### Fixed
+
+- A command that timed out while queued no longer runs later in Blender, after nobody was waiting for it, which could make a retry do the work twice.
+- Commands from a client that disconnected before they started are skipped.
+
 ## [1.3.0] - 2026-11-20
 
 ### Added
