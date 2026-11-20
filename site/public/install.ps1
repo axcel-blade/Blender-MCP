@@ -6,7 +6,7 @@
 $ErrorActionPreference = "Stop"
 
 $RepoUrl = "https://github.com/axcel-blade/Blender-MCP.git"
-$Branch = if ($env:BLENDER_MCP_BRANCH) { $env:BLENDER_MCP_BRANCH } else { "develop" }
+$Branch = if ($env:BLENDER_MCP_BRANCH) { $env:BLENDER_MCP_BRANCH } else { "main" }
 $InstallDir = if ($env:BLENDER_MCP_HOME) {
     $env:BLENDER_MCP_HOME
 } else {

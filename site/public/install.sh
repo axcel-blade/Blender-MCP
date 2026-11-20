@@ -8,7 +8,7 @@ set -eu
 (set -o pipefail) 2>/dev/null && set -o pipefail
 
 REPO_URL="${BLENDER_MCP_REPO:-https://github.com/axcel-blade/Blender-MCP.git}"
-BRANCH="${BLENDER_MCP_BRANCH:-develop}"
+BRANCH="${BLENDER_MCP_BRANCH:-main}"
 INSTALL_DIR="${BLENDER_MCP_HOME:-$HOME/Blender-MCP}"
 
 echo "Blender MCP installer"
