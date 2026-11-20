@@ -111,6 +111,6 @@ Register-McpClients "$RepoRoot"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Green
 Write-Host "1. Open Blender -> Edit -> Preferences -> Add-ons -> enable 'Blender MCP'"
-Write-Host "2. In the 3D Viewport press N -> AI / MCP -> Start"
+Write-Host "2. In the 3D Viewport press N -> Blender MCP -> Start"
 Write-Host "3. Fully quit and reopen your AI client(s)"
 Write-Host "Done."

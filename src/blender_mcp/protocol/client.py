@@ -72,7 +72,7 @@ class BlenderBridgeClient:
             self._last_error = str(exc)
             raise BlenderNotConnectedError(
                 f"Could not connect to Blender at {self.config.host}:{self.config.port}: {exc}. "
-                "Open Blender, enable the Blender MCP addon, and confirm the AI / MCP panel "
+                "Open Blender, enable the Blender MCP addon, and confirm the Blender MCP panel "
                 "shows RUNNING."
             ) from exc
 

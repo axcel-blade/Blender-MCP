@@ -54,7 +54,7 @@ uv run blender-mcp install-addon
 ```
 
 1. Blender → **Edit → Preferences → Add-ons** → enable **Blender MCP**
-2. 3D Viewport → press **N** → **AI / MCP** → **Start**
+2. 3D Viewport → press **N** → **Blender MCP** → **Start**
 3. Point your MCP client at:
 
 ```json
