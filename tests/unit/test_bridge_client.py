@@ -31,7 +31,7 @@ async def test_send_command_timeout():
 
 @pytest.mark.asyncio
 async def test_connect_authenticates_before_read_loop():
-    client = BlenderBridgeClient(BridgeConfig(host="127.0.0.1", port=9876, connection_timeout=1.0))
+    client = BlenderBridgeClient(BridgeConfig(host="127.0.0.1", port=9877, connection_timeout=1.0))
     order: list[str] = []
     open_kwargs: dict = {}
 
@@ -78,7 +78,7 @@ async def test_connect_authenticates_before_read_loop():
 async def test_read_loop_accepts_large_ndjson_payload():
     """Regression: screenshot base64 lines exceed asyncio's default 64 KiB limit."""
     client = BlenderBridgeClient(
-        BridgeConfig(host="127.0.0.1", port=9876, connection_timeout=1.0),
+        BridgeConfig(host="127.0.0.1", port=9877, connection_timeout=1.0),
         reader_limit=DEFAULT_READER_LIMIT,
     )
     large_b64 = "A" * (100 * 1024)
@@ -104,3 +104,28 @@ async def test_read_loop_accepts_large_ndjson_payload():
     response = future.result()
     assert response.success is True
     assert len(response.result["image_base64"]) == len(large_b64)
+
+
+@pytest.mark.asyncio
+async def test_foreign_addon_on_port_gives_clear_error():
+    """A non-NDJSON peer (e.g. 'MCP for Blender') must not hang or look like auth failure."""
+
+    async def handle(reader, writer):
+        await reader.readline()
+        writer.write(b'{"status": "error", "message": "Unknown command type: auth"}')
+        await writer.drain()
+        await asyncio.sleep(2)
+        writer.close()
+
+    server = await asyncio.start_server(handle, "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    try:
+        client = BlenderBridgeClient(
+            BridgeConfig(host="127.0.0.1", port=port, connection_timeout=0.5)
+        )
+        with pytest.raises(BlenderNotConnectedError) as exc_info:
+            await client.connect()
+        assert "not the Blender MCP addon" in str(exc_info.value)
+    finally:
+        server.close()
+        await server.wait_closed()

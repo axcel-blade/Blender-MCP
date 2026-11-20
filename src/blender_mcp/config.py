@@ -19,7 +19,7 @@ class ScriptPermission(StrEnum):
 
 class BridgeConfig(BaseModel):
     host: str = "127.0.0.1"
-    port: int = 9876
+    port: int = 9877
     auth_token: str = ""
     connection_timeout: float = 5.0
     request_timeout: float = 60.0
@@ -31,7 +31,7 @@ class BridgeConfig(BaseModel):
 
 class SecurityConfig(BaseModel):
     safe_execution_mode: bool = True
-    script_permission: ScriptPermission = ScriptPermission.RESTRICTED
+    script_permission: ScriptPermission = ScriptPermission.TRUSTED
     confirm_destructive: bool = True
     confirm_overwrite: bool = True
     max_request_bytes: int = 1_048_576
@@ -104,7 +104,7 @@ class Settings(BaseSettings):
     )
 
     host: str = Field(default="127.0.0.1", alias="HOST")
-    port: int = Field(default=9876, alias="PORT")
+    port: int = Field(default=9877, alias="PORT")
     auth_token: str = Field(default="", alias="AUTH_TOKEN")
     connection_timeout: float = Field(default=5.0, alias="CONNECTION_TIMEOUT")
     request_timeout: float = Field(default=60.0, alias="REQUEST_TIMEOUT")
@@ -115,7 +115,7 @@ class Settings(BaseSettings):
 
     safe_execution_mode: bool = Field(default=True, alias="SAFE_EXECUTION")
     script_permission: ScriptPermission = Field(
-        default=ScriptPermission.RESTRICTED, alias="SCRIPT_PERMISSION"
+        default=ScriptPermission.TRUSTED, alias="SCRIPT_PERMISSION"
     )
     confirm_destructive: bool = True
     confirm_overwrite: bool = True
@@ -245,7 +245,7 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         overrides.update(
             {
                 "host": bridge.get("host", "127.0.0.1"),
-                "port": bridge.get("port", 9876),
+                "port": bridge.get("port", 9877),
                 "auth_token": bridge.get("auth_token", ""),
                 "connection_timeout": bridge.get("connection_timeout", 5.0),
                 "request_timeout": bridge.get("request_timeout", 60.0),

@@ -11,7 +11,7 @@ from typing import Any
 
 from . import execution_queue
 
-DEFAULT_PORT = 9876
+DEFAULT_PORT = 9877
 MAX_REQUEST_BYTES = 1_048_576
 
 _server_socket: socket.socket | None = None
@@ -122,15 +122,27 @@ def start_server() -> dict[str, Any]:
             host = "127.0.0.1"
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+        # Windows: SO_REUSEADDR lets a second process bind the *same* port, so two
+        # Blender MCP addons (e.g. this one and "MCP for Blender") would both appear
+        # RUNNING while connections go to whichever one Windows picks.
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+    else:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         sock.bind((host, port))
         sock.listen(5)
         sock.settimeout(1.0)
     except OSError as exc:
-        _state["last_error"] = str(exc)
-        log(f"Failed to bind {host}:{port}: {exc}")
-        raise
+        sock.close()
+        msg = (
+            f"Port {port} on {host} is already in use ({exc}). Another Blender instance or "
+            "MCP addon (e.g. 'MCP for Blender') is listening there. Stop it or change the "
+            "port in the addon preferences and BLENDER_MCP_PORT."
+        )
+        _state["last_error"] = msg
+        log(msg)
+        raise OSError(msg) from exc
 
     _server_socket = sock
     _stop_event.clear()

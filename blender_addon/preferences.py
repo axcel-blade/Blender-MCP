@@ -18,7 +18,7 @@ class BLENDERMCP_AddonPreferences(AddonPreferences):
     bl_idname = __package__.split(".")[0] if __package__ else "blender_addon"
 
     host: StringProperty(name="Host", default="127.0.0.1")
-    port: IntProperty(name="Port", default=9876, min=1, max=65535)
+    port: IntProperty(name="Port", default=9877, min=1, max=65535)
     bind_address: StringProperty(name="Bind Address", default="127.0.0.1")
     auth_token: StringProperty(name="Auth Token", default="", subtype="PASSWORD")
     auto_start: BoolProperty(name="Auto-start server", default=True)
@@ -36,7 +36,7 @@ class BLENDERMCP_AddonPreferences(AddonPreferences):
             ("confirmation", "Confirmation", "Require confirmed=true"),
             ("trusted", "Trusted", "Allow execute_blender_code"),
         ),
-        default="restricted",
+        default="trusted",
     )
     execution_timeout: FloatProperty(name="Execution timeout", default=60.0, min=1.0)
     allowed_directories: StringProperty(
