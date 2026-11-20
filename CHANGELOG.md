@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-20
+
+### Added
+
+- Tool profiles. The default `core` profile exposes 12 tools centred on `execute_blender_code` and `look`; set `BLENDER_MCP_TOOL_PROFILE=full` (or `[tools] profile = "full"`) for all ~170 specialised tools.
+- `look`: one screenshot tool with `mode` (viewport, material, rendered, wireframe, camera, angles), `view` and `max_size`, replacing the seven capture tools in the core profile.
+- `execute_blender_code` preloads `bpy`, `mathutils`, `C` and `D`, and returns the value of a trailing expression when no `result` is set.
+
+### Changed
+
+- Server instructions now lead with `execute_blender_code` and cover common `bpy` pitfalls (localized node names, Blender 4.x Principled BSDF inputs, enum lookups, imported model scale).
+- Screenshots use an off-screen viewport render, so popups, the splash screen and UI no longer appear in images; axis views are framed and the user's viewport is restored afterwards.
+- `search_assets` defaults `source` to `polyhaven`.
+- Script errors show only the frames from the submitted script.
+
+### Fixed
+
+- Functions, lambdas and comprehensions in `execute_blender_code` scripts can see the script's own imports and variables (previously `NameError`).
+
 ## [1.2.3] - 2026-11-20
 
 ### Changed
