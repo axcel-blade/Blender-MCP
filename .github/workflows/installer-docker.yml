@@ -1,0 +1,56 @@
+name: Installer (Docker)
+
+# Runs the macOS/Linux installers end to end inside clean Linux containers,
+# piping the one-line installer through `sh` exactly like `curl ... | sh`.
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "site/public/install.sh"
+      - "installers/linux/**"
+      - "installers/macos/**"
+      - "tests/installer/**"
+      - "src/blender_mcp/cli.py"
+      - ".github/workflows/installer-docker.yml"
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "site/public/install.sh"
+      - "installers/linux/**"
+      - "installers/macos/**"
+      - "tests/installer/**"
+      - "src/blender_mcp/cli.py"
+      - ".github/workflows/installer-docker.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: installer-docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install:
+    name: ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - ubuntu:22.04
+          - ubuntu:24.04
+          - debian:12
+          - fedora:41
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run installers in ${{ matrix.image }}
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/src:ro" \
+            "${{ matrix.image }}" \
+            sh /src/tests/installer/run-in-container.sh /src
