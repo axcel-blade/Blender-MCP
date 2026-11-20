@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-20
+
+### Added
+
+- Screenshot and render tools return real MCP images, so the AI can see the viewport.
+- `import_external_asset` downloads and imports assets end to end: Poly Haven models, HDRIs (world lighting) and PBR textures; Sketchfab and Poly Pizza models. `target_size` scales models, which are placed on the ground; replies include `world_bounding_box`.
+- AI 3D generation with Meshy and Tripo: `generate_3d`, `get_generation_status`, `list_generation_jobs`.
+- `get_addon_status` (versions, enabled libraries/generators, outdated-addon warnings), `get_guide` with bpy/materials/scene guides (also `blender://guides/*` resources), and `search_scene`.
+- Downloads are HTTPS-only, size-limited and protected against path traversal / zip-slip.
+
 ### Fixed
 
 - Blender MCP no longer collides with the third-party "MCP for Blender" addon: the default bridge port is now `9877` (was `9876`).
