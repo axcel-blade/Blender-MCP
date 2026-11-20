@@ -26,7 +26,7 @@ def _load_api_docs():
             sys.modules[name] = pkg
     handlers = sys.modules["blender_addon.handlers"]
     if not hasattr(handlers, "command"):
-        handlers.command = lambda name: (lambda f: f)
+        handlers.command = lambda name: lambda f: f
     spec = importlib.util.spec_from_file_location(
         "blender_addon.handlers.api_docs", ROOT / "blender_addon/handlers/api_docs.py"
     )
@@ -39,8 +39,17 @@ api = _load_api_docs()
 
 
 def _prop(**kw):
-    base = dict(identifier="x", type="FLOAT", description="d", is_readonly=False,
-                subtype="NONE", array_length=0, default=1.5, hard_min=0.0, hard_max=10.0)
+    base = dict(
+        identifier="x",
+        type="FLOAT",
+        description="d",
+        is_readonly=False,
+        subtype="NONE",
+        array_length=0,
+        default=1.5,
+        hard_min=0.0,
+        hard_max=10.0,
+    )
     base.update(kw)
     return NS(**base)
 
@@ -58,8 +67,13 @@ async def test_tool_forwards_query_to_addon():
     import blender_mcp.tools.status as status
 
     ctx = NS(settings=Settings(), bridge=bridge)
-    status.register(fake := NS(tool=lambda name: (lambda f: setattr(fake, name, f) or f),
-                               resource=lambda uri: (lambda f: f)), ctx)
+    status.register(
+        fake := NS(
+            tool=lambda name: lambda f: setattr(fake, name, f) or f,
+            resource=lambda uri: lambda f: f,
+        ),
+        ctx,
+    )
     result = await fake.lookup_api("Scene")
     bridge.send_command.assert_awaited_once_with("lookup_api", {"query": "Scene"})
     assert result["success"] is True
@@ -67,8 +81,14 @@ async def test_tool_forwards_query_to_addon():
 
 def test_describe_scalar_property():
     info = api.describe_property(_prop())
-    assert info == {"identifier": "x", "type": "FLOAT", "description": "d",
-                    "default": 1.5, "min": 0.0, "max": 10.0}
+    assert info == {
+        "identifier": "x",
+        "type": "FLOAT",
+        "description": "d",
+        "default": 1.5,
+        "min": 0.0,
+        "max": 10.0,
+    }
 
 
 def test_describe_enum_property_lists_identifiers():
@@ -89,18 +109,21 @@ def test_describe_enum_truncates_and_flags_dynamic():
 def test_describe_pointer_and_array():
     ptr = api.describe_property(_prop(type="POINTER", fixed_type=NS(identifier="Material")))
     assert ptr["fixed_type"] == "Material"
-    arr = api.describe_property(_prop(array_length=3, default_array=(0.0, 1.0, 2.0),
-                                      subtype="XYZ", is_readonly=True))
+    arr = api.describe_property(
+        _prop(array_length=3, default_array=(0.0, 1.0, 2.0), subtype="XYZ", is_readonly=True)
+    )
     assert arr["default"] == [0.0, 1.0, 2.0]
     assert arr["subtype"] == "XYZ" and arr["readonly"] is True
 
 
 @pytest.mark.parametrize(
     ("ident", "tree"),
-    [("ShaderNodeBsdfPrincipled", "ShaderNodeTree"),
-     ("GeometryNodeMeshCube", "GeometryNodeTree"),
-     ("FunctionNodeRandomValue", "GeometryNodeTree"),
-     ("Object", None)],
+    [
+        ("ShaderNodeBsdfPrincipled", "ShaderNodeTree"),
+        ("GeometryNodeMeshCube", "GeometryNodeTree"),
+        ("FunctionNodeRandomValue", "GeometryNodeTree"),
+        ("Object", None),
+    ],
 )
 def test_node_tree_type(ident, tree):
     assert api._node_tree_type(ident) == tree
@@ -114,7 +137,7 @@ def test_python_lookup_without_blender():
 
 def test_parse_enum_error():
     msg = (
-        "bpy_struct: item.attr = val: enum \"__mcp_invalid__\" "
+        'bpy_struct: item.attr = val: enum "__mcp_invalid__" '
         "not found in ('BLENDER_EEVEE', 'CYCLES')"
     )
     assert api.parse_enum_error(msg) == ["BLENDER_EEVEE", "CYCLES"]

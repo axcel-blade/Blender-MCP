@@ -143,7 +143,7 @@ def test_syntax_error_left_to_python():
 def scripting(monkeypatch):
     handlers = types.ModuleType("blender_addon.handlers")
     handlers.__path__ = [str(ROOT / "blender_addon" / "handlers")]
-    handlers.command = lambda name: (lambda f: f)
+    handlers.command = lambda name: lambda f: f
     monkeypatch.setitem(sys.modules, "blender_addon.handlers", handlers)
     spec = importlib.util.spec_from_file_location(
         "blender_addon.handlers.scripting", ROOT / "blender_addon/handlers/scripting.py"
@@ -177,6 +177,6 @@ def test_handler_allows_when_safe_mode_off(scripting, monkeypatch):
 def test_preview_lists_refused_operations(scripting, monkeypatch):
     monkeypatch.setattr(scripting, "_prefs", lambda: _prefs(True))
     out = scripting.execute_blender_code(
-        {"code": "bpy.ops.wm.quit_blender()", "preview_only": True})
-    assert out["refused_operations"] == [
-        f"line 1: bpy.ops.wm.quit_blender ({safety.SESSION})"]
+        {"code": "bpy.ops.wm.quit_blender()", "preview_only": True}
+    )
+    assert out["refused_operations"] == [f"line 1: bpy.ops.wm.quit_blender ({safety.SESSION})"]

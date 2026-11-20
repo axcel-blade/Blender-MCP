@@ -185,7 +185,7 @@ class BlenderBridgeClient:
                     code = ErrorCode(response.error_code)
                 except ValueError:
                     code = ErrorCode.OPERATION_FAILED
-            details = dict(response.details or {"command": command})
+            details: dict[str, Any] = dict(response.details or {"command": command})
             if response.user_edits:
                 details["user_edits"] = response.user_edits
             raise BlenderMCPError(

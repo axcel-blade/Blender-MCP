@@ -76,8 +76,11 @@ def addon_port(monkeypatch):
         if handler is None:
             return {"success": False, "error_code": "NOT_IMPLEMENTED", "error": command}
         result = handler(params)
-        return result if isinstance(result, dict) and "success" in result else {
-            "success": True, "result": result}
+        return (
+            result
+            if isinstance(result, dict) and "success" in result
+            else {"success": True, "result": result}
+        )
 
     handlers = types.ModuleType("blender_addon.handlers")
     handlers.dispatch = dispatch
@@ -93,8 +96,9 @@ def addon_port(monkeypatch):
 
     monkeypatch.setattr(bridge.execution_queue, "run_on_main_thread", run_on_main_thread)
     monkeypatch.setattr(bridge, "_prefs", lambda: None)
-    monkeypatch.setattr(bridge, "_authenticate", lambda token: (token in ("", "secret"),
-                                                                 {"addon_version": "test"}))
+    monkeypatch.setattr(
+        bridge, "_authenticate", lambda token: (token in ("", "secret"), {"addon_version": "test"})
+    )
     monkeypatch.setattr(bridge, "log", lambda message: None)
     bridge._stop_event.clear()
 
@@ -111,8 +115,7 @@ def addon_port(monkeypatch):
                 client, addr = server.accept()
             except (TimeoutError, OSError):
                 continue
-            threading.Thread(target=bridge._handle_client, args=(client, addr),
-                             daemon=True).start()
+            threading.Thread(target=bridge._handle_client, args=(client, addr), daemon=True).start()
 
     thread = threading.Thread(target=accept_loop, daemon=True)
     thread.start()
@@ -123,8 +126,16 @@ def addon_port(monkeypatch):
 
 
 def _client(port: int, **kw) -> BlenderBridgeClient:
-    return BlenderBridgeClient(BridgeConfig(host="127.0.0.1", port=port, connection_timeout=2,
-                                            request_timeout=10, heartbeat_interval=60, **kw))
+    return BlenderBridgeClient(
+        BridgeConfig(
+            host="127.0.0.1",
+            port=port,
+            connection_timeout=2,
+            request_timeout=10,
+            heartbeat_interval=60,
+            **kw,
+        )
+    )
 
 
 def _raw_connect(port: int, token: str = "") -> socket.socket:
@@ -169,7 +180,8 @@ async def test_large_response_payloads(addon_port, size):
         assert len(r["result"]["data"]) == size
         # The connection is still in sync afterwards.
         assert (await client.send_command("echo", {"after": True}))["result"]["echo"] == {
-            "after": True}
+            "after": True
+        }
     finally:
         await client.disconnect()
 
@@ -199,13 +211,12 @@ def test_request_split_byte_by_byte_including_multibyte_chars(addon_port):
     """Every byte in its own TCP send, so multi-byte UTF-8 characters arrive split."""
     sock = _raw_connect(addon_port)
     try:
-        request = {"type": "request", "id": "split", "command": "echo",
-                   "params": {"name": UNICODE}}
+        request = {"type": "request", "id": "split", "command": "echo", "params": {"name": UNICODE}}
         raw = (json.dumps(request, ensure_ascii=False) + "\n").encode("utf-8")
         assert len(raw) > len(raw.decode("utf-8"))  # really contains multi-byte chars
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         for i in range(len(raw)):
-            sock.sendall(raw[i:i + 1])
+            sock.sendall(raw[i : i + 1])
         reply = json.loads(_readline(sock).decode("utf-8"))
         assert reply["id"] == "split"
         assert reply["result"]["echo"]["name"] == UNICODE
@@ -217,8 +228,12 @@ def test_two_requests_in_one_send_both_answered_in_order(addon_port):
     sock = _raw_connect(addon_port)
     try:
         lines = b"".join(
-            (json.dumps({"type": "request", "id": f"r{i}", "command": "echo",
-                         "params": {"i": i}}) + "\n").encode()
+            (
+                json.dumps(
+                    {"type": "request", "id": f"r{i}", "command": "echo", "params": {"i": i}}
+                )
+                + "\n"
+            ).encode()
             for i in range(2)
         )
         sock.sendall(lines)
@@ -236,8 +251,11 @@ def test_invalid_json_line_does_not_kill_connection(addon_port):
     try:
         sock.sendall(b"{not json}\n")
         assert json.loads(_readline(sock))["error"] == "Invalid JSON"
-        sock.sendall((json.dumps({"type": "request", "id": "ok", "command": "echo",
-                                  "params": {}}) + "\n").encode())
+        sock.sendall(
+            (
+                json.dumps({"type": "request", "id": "ok", "command": "echo", "params": {}}) + "\n"
+            ).encode()
+        )
         assert json.loads(_readline(sock))["id"] == "ok"
     finally:
         sock.close()
@@ -332,8 +350,7 @@ async def test_out_of_order_replies_matched_by_id():
     async def reverse(reader, writer):
         reqs = [json.loads(await reader.readline()) for _ in range(5)]
         for req in reversed(reqs):
-            reply = {"type": "response", "id": req["id"], "success": True,
-                     "result": req["params"]}
+            reply = {"type": "response", "id": req["id"], "success": True, "result": req["params"]}
             writer.write((json.dumps(reply) + "\n").encode())
         await writer.drain()
         await asyncio.sleep(1)
@@ -356,7 +373,7 @@ async def test_reply_split_across_writes_with_multibyte_char():
         reply = {"type": "response", "id": req["id"], "success": True, "result": UNICODE}
         raw = (json.dumps(reply, ensure_ascii=False) + "\n").encode("utf-8")
         for i in range(0, len(raw), 3):  # 3-byte pieces split the 4-byte emoji
-            writer.write(raw[i:i + 3])
+            writer.write(raw[i : i + 3])
             await writer.drain()
             await asyncio.sleep(0)
         await asyncio.sleep(1)

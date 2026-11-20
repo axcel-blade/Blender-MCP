@@ -41,18 +41,34 @@ bridge = _load_addon_module("bridge_server")
 
 
 def _obj(**kw):
-    base = {"type": "MESH", "location": (0.0, 0.0, 0.0), "rotation": (0.0, 0.0, 0.0),
-            "scale": (1.0, 1.0, 1.0), "parent": None, "data": "Cube", "hidden": False,
-            "hide_render": False, "materials": ("Material",), "modifiers": (),
-            "collections": ("Collection",), "geometry": (8, 12, 6)}
+    base = {
+        "type": "MESH",
+        "location": (0.0, 0.0, 0.0),
+        "rotation": (0.0, 0.0, 0.0),
+        "scale": (1.0, 1.0, 1.0),
+        "parent": None,
+        "data": "Cube",
+        "hidden": False,
+        "hide_render": False,
+        "materials": ("Material",),
+        "modifiers": (),
+        "collections": ("Collection",),
+        "geometry": (8, 12, 6),
+    }
     base.update(kw)
     return base
 
 
 def _scene(**kw):
-    base = {"scene": "Scene", "objects": {"Cube": _obj(), "Light": _obj(type="LIGHT")},
-            "selected": ["Cube"], "active": "Cube", "mode": "OBJECT", "frame": 1,
-            "materials": ["Material"]}
+    base = {
+        "scene": "Scene",
+        "objects": {"Cube": _obj(), "Light": _obj(type="LIGHT")},
+        "selected": ["Cube"],
+        "active": "Cube",
+        "mode": "OBJECT",
+        "frame": 1,
+        "materials": ["Material"],
+    }
     base.update(kw)
     return base
 
@@ -75,11 +91,13 @@ def test_moved_object_reports_new_transform():
 
 def test_geometry_modifier_and_material_edits():
     after = _scene(materials=["Material", "Red"])
-    after["objects"]["Cube"] = _obj(geometry=(10, 15, 7), modifiers=("Bevel",),
-                                    materials=("Red",))
+    after["objects"]["Cube"] = _obj(geometry=(10, 15, 7), modifiers=("Bevel",), materials=("Red",))
     report = tracker.diff(_scene(), after)
     assert report["changed_objects"]["items"][0]["changed"] == [
-        "geometry", "materials", "modifiers"]
+        "geometry",
+        "materials",
+        "modifiers",
+    ]
     assert report["added_materials"]["items"] == ["Red"]
 
 
@@ -98,7 +116,8 @@ def test_added_removed_selection_mode_frame():
 
 def test_scene_switch_reported_alone():
     assert tracker.diff(_scene(), _scene(scene="Other")) == {
-        "scene_switched": {"from": "Scene", "to": "Other"}}
+        "scene_switched": {"from": "Scene", "to": "Other"}
+    }
 
 
 def test_long_lists_are_capped():
@@ -130,8 +149,9 @@ def dispatch_env(monkeypatch):
     handlers = types.ModuleType("blender_addon.handlers")
     handlers.dispatch = lambda c, p: calls.append(c) or {"success": True, "result": "ok"}
     monkeypatch.setitem(sys.modules, "blender_addon.handlers", handlers)
-    monkeypatch.setattr(bridge.execution_queue, "run_on_main_thread",
-                        lambda func, timeout, should_run=None: func())
+    monkeypatch.setattr(
+        bridge.execution_queue, "run_on_main_thread", lambda func, timeout, should_run=None: func()
+    )
     monkeypatch.setattr(bridge, "log", lambda m: None)
     return calls, fake, handlers
 
@@ -180,8 +200,11 @@ def test_tracker_failure_never_fails_command(dispatch_env, monkeypatch):
 
 def test_tracking_can_be_turned_off(dispatch_env, monkeypatch):
     calls, _, _ = dispatch_env
-    monkeypatch.setattr(bridge, "_prefs", lambda: types.SimpleNamespace(
-        track_user_edits=False, execution_timeout=60.0))
+    monkeypatch.setattr(
+        bridge,
+        "_prefs",
+        lambda: types.SimpleNamespace(track_user_edits=False, execution_timeout=60.0),
+    )
     resp = bridge._dispatch_request({"id": "1", "command": "x"})
     assert calls == ["x"] and "user_edits" not in resp
 
@@ -191,8 +214,7 @@ def test_tracking_can_be_turned_off(dispatch_env, monkeypatch):
 
 def test_response_carries_user_edits_to_tool_result():
     edits = {"changed_objects": {"items": [{"name": "Cube", "changed": ["location"]}]}}
-    resp = BridgeResponse.from_dict({"id": "1", "success": True, "result": 1,
-                                     "user_edits": edits})
+    resp = BridgeResponse.from_dict({"id": "1", "success": True, "result": 1, "user_edits": edits})
     assert resp.to_tool_result()["user_edits"] == edits
     plain = BridgeResponse.from_dict({"id": "1", "success": True, "result": 1})
     assert "user_edits" not in plain.to_tool_result()
@@ -209,11 +231,16 @@ async def test_user_edits_kept_on_error_replies():
     async def reply():
         while not sent:
             await asyncio.sleep(0.001)
-        await client._handle_incoming({
-            "type": "response", "id": sent[0]["id"], "success": False,
-            "error_code": "OBJECT_NOT_FOUND", "error": "Object not found: Cube",
-            "user_edits": {"removed_objects": {"items": ["Cube"]}},
-        })
+        await client._handle_incoming(
+            {
+                "type": "response",
+                "id": sent[0]["id"],
+                "success": False,
+                "error_code": "OBJECT_NOT_FOUND",
+                "error": "Object not found: Cube",
+                "user_edits": {"removed_objects": {"items": ["Cube"]}},
+            }
+        )
 
     task = asyncio.create_task(reply())
     with pytest.raises(BlenderMCPError) as exc_info:
