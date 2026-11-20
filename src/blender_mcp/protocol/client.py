@@ -21,11 +21,18 @@ from blender_mcp.protocol.messages import BridgeRequest, BridgeResponse
 logger = logging.getLogger(__name__)
 
 
+# Screenshots/render results embed base64 PNG in a single NDJSON line.
+# asyncio's default StreamReader limit (64 KiB) truncates those payloads and
+# surfaces as "Connection lost" / WinError 10054 on the Blender bridge.
+DEFAULT_READER_LIMIT = 32 * 1024 * 1024  # 32 MiB
+
+
 class BlenderBridgeClient:
     """Newline-delimited JSON client for the Blender addon bridge."""
 
-    def __init__(self, config: BridgeConfig) -> None:
+    def __init__(self, config: BridgeConfig, *, reader_limit: int = DEFAULT_READER_LIMIT) -> None:
         self.config = config
+        self._reader_limit = reader_limit
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
         self._lock = asyncio.Lock()
@@ -53,7 +60,11 @@ class BlenderBridgeClient:
             return
         try:
             self._reader, self._writer = await asyncio.wait_for(
-                asyncio.open_connection(self.config.host, self.config.port),
+                asyncio.open_connection(
+                    self.config.host,
+                    self.config.port,
+                    limit=self._reader_limit,
+                ),
                 timeout=self.config.connection_timeout,
             )
         except (TimeoutError, OSError) as exc:

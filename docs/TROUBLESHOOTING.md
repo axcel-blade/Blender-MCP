@@ -3,6 +3,7 @@
 | Problem | Fix |
 |---------|-----|
 | `BLENDER_NOT_CONNECTED` / connection refused | **Blender must be open** with the Blender MCP addon enabled and the bridge **RUNNING** (N-panel → AI / MCP → Start). A running `blender-mcp` MCP process alone does **not** open port 9876 — that listener lives inside Blender. Confirm port matches config (`127.0.0.1:9876` by default). |
+| `Connection lost` / WinError 10054 during viewport/render capture | Fixed by raising the MCP client's NDJSON reader limit (screenshots embed large base64 in one line). Update the MCP server package and restart the Cursor Blender MCP entry; disable/enable the Blender addon (or restart Blender) so screenshot downscaling helpers reload. |
 | Auth failed | Match `auth_token` in addon preferences and `BLENDER_MCP_AUTH_TOKEN` / config. |
 | Script permission denied | Set addon script permission to confirmation/trusted intentionally. |
 | Timeout | Break work into smaller steps; raise request timeout. |

@@ -79,6 +79,13 @@ def register() -> None:
     commands registered because decorators do not run again.
     """
     pkg = __name__
+    # Reload shared helpers before handlers so ``from .. import screenshots`` etc.
+    # see the updated module instead of a stale cached copy.
+    root = pkg.rsplit(".", 1)[0]
+    for helper in ("screenshots",):
+        full = f"{root}.{helper}"
+        if full in sys.modules:
+            importlib.reload(sys.modules[full])
     for name in _HANDLER_MODULES:
         full = f"{pkg}.{name}"
         if full in sys.modules:
