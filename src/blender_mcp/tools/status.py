@@ -12,7 +12,7 @@ from blender_mcp.tools.registry import AppContext, call_blender
 from blender_mcp.utils.results import ok
 
 # Commands newer server features rely on; missing ones mean the addon is outdated.
-REQUIRED_COMMANDS = ("import_local_asset",)
+REQUIRED_COMMANDS = ("import_local_asset", "lookup_api")
 
 
 def list_guides() -> list[str]:
@@ -93,6 +93,22 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
             return ok({"name": name, "guide": read_guide(name)})
         except ValueError as exc:
             return {"success": False, "error": str(exc), "guides": list_guides()}
+
+    @mcp.tool(name="lookup_api")
+    async def lookup_api(query: str) -> dict[str, Any]:
+        """Look up the Blender Python API in the user's running Blender, so names match
+        their version. Use it before writing bpy code you are unsure of.
+
+        ``query`` is either an identifier or search words:
+        - a type: ``Scene``, ``bpy.types.RenderSettings`` (properties with types,
+          defaults, enum identifiers; node types also list their input/output sockets,
+          e.g. ``ShaderNodeBsdfPrincipled``)
+        - a member: ``bpy.types.RenderSettings.engine``, ``Object.modifiers``
+        - an operator: ``bpy.ops.mesh.primitive_cube_add`` (its arguments)
+        - a Python module or function: ``mathutils.Vector``, ``bmesh.ops.bevel``
+        - words: ``bevel modifier width`` (matching types, properties and operators)
+        """
+        return await call_blender(ctx, "lookup_api", {"query": query}, group="scene")
 
     @mcp.tool(name="search_scene")
     async def search_scene(query: str = "", limit: int = 30) -> dict[str, Any]:
