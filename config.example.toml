@@ -1,6 +1,6 @@
 [bridge]
 host = "127.0.0.1"
-port = 9876
+port = 9877
 auth_token = ""
 connection_timeout = 5.0
 request_timeout = 60.0
@@ -11,7 +11,7 @@ allow_remote = false
 
 [security]
 safe_execution_mode = true
-script_permission = "restricted"  # restricted | confirmation | trusted
+script_permission = "trusted"  # restricted | confirmation | trusted
 confirm_destructive = true
 confirm_overwrite = true
 max_request_bytes = 1048576

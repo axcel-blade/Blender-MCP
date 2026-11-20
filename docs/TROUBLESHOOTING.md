@@ -11,7 +11,7 @@
 | MCP client doesn't see tools | Restart the client after config changes; run only one Blender MCP server instance. |
 | Panel says RUNNING but clients still fail | Press **Stop**, then **Start**, or restart Blender. Use **Connection Test** (probes TCP). Stale state after an accept-loop crash is recovered automatically on Start in current builds. |
 | `Unknown command` after disable/enable | Fixed in current builds by reloading handler modules on register. Update/reinstall the addon, or restart Blender once. |
-| Port busy / wrong addon | Disable other MCP addons (e.g. third-party “MCP for Blender”) that also bind `9876`. |
+| Port busy / wrong addon | Disable other MCP addons (e.g. third-party “MCP for Blender”) that use the same port (Blender MCP now defaults to `9877`; "MCP for Blender" uses `9876`). |
 
 ## Connection checklist
 

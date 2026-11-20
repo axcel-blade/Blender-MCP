@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
+### Fixed
 
-- 
+- Blender MCP no longer collides with the third-party "MCP for Blender" addon: the default bridge port is now `9877` (was `9876`).
+- On Windows the addon binds with `SO_EXCLUSIVEADDRUSE`, so a second addon on the same port fails loudly instead of silently stealing connections.
+- The MCP server reports a clear "not the Blender MCP addon" error when a different service owns the port, instead of hanging until the auth timeout.
+
+### Changed
+
+- `execute_blender_code` is enabled by default (`script_permission=trusted`), matching "MCP for Blender". Set `restricted`/`confirmation` to lock it down.
 
 ## [1.0.2] - 2026-11-20
 

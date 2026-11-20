@@ -22,7 +22,7 @@ def _prefs():
 @command("execute_blender_code")
 def execute_blender_code(params: dict[str, Any]):
     prefs = _prefs()
-    mode = getattr(prefs, "script_permission", "restricted") if prefs else "restricted"
+    mode = getattr(prefs, "script_permission", "trusted") if prefs else "trusted"
     safe = getattr(prefs, "safe_execution_mode", True) if prefs else True
     code = params.get("code") or ""
     preview_only = bool(params.get("preview_only", False))

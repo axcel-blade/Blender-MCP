@@ -7,9 +7,9 @@ Important keys:
 | Setting | Default | Notes |
 |---------|---------|-------|
 | `bridge.host` | `127.0.0.1` | Blender bridge host |
-| `bridge.port` | `9876` | Must match addon |
+| `bridge.port` | `9877` | Must match addon (9876 is used by the third-party "MCP for Blender") |
 | `bridge.auth_token` | empty | Shared secret if set in addon prefs |
-| `security.script_permission` | `restricted` | `restricted` / `confirmation` / `trusted` |
+| `security.script_permission` | `trusted` | `restricted` / `confirmation` / `trusted` |
 | `security.allowed_directories` | `[]` | Path allow-list |
 | `tool_groups.*` | enabled | Disable capability groups |
 | `providers.*` | mixed | External asset providers |

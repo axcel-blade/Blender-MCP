@@ -216,18 +216,43 @@ class BlenderBridgeClient:
                 self._reader.readline(), timeout=self.config.connection_timeout
             )
         except TimeoutError as exc:
+            # A non-NDJSON peer (e.g. the "MCP for Blender" addon, which replies
+            # without a trailing newline) never completes readline().
+            partial = b""
+            with contextlib.suppress(Exception):
+                partial = await asyncio.wait_for(self._reader.read(4096), timeout=0.2)
             await self.disconnect()
-            raise AuthFailedError("Timed out waiting for auth response") from exc
+            raise BlenderNotConnectedError(self._foreign_peer_message(partial)) from exc
+        except (ValueError, asyncio.LimitOverrunError) as exc:
+            await self.disconnect()
+            raise BlenderNotConnectedError(self._foreign_peer_message(b"")) from exc
 
         if not line:
             await self.disconnect()
             raise AuthFailedError("Connection closed during authentication")
 
-        data = json.loads(line.decode("utf-8"))
+        try:
+            data = json.loads(line.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            await self.disconnect()
+            raise BlenderNotConnectedError(self._foreign_peer_message(line)) from exc
+        if not isinstance(data, dict) or data.get("type") != "response":
+            await self.disconnect()
+            raise BlenderNotConnectedError(self._foreign_peer_message(line))
         if not data.get("success", False):
             await self.disconnect()
             raise AuthFailedError(data.get("error") or "Authentication rejected")
         self._addon_info = data.get("result") or {}
+
+    def _foreign_peer_message(self, received: bytes) -> str:
+        snippet = received[:120].decode("utf-8", "replace")
+        return (
+            f"Something is listening on {self.config.host}:{self.config.port} but it is not the "
+            "Blender MCP addon (it did not answer the bridge handshake). This usually means "
+            "another Blender addon such as 'MCP for Blender' owns the port. Disable it, or set "
+            "a different port in the Blender MCP addon preferences and BLENDER_MCP_PORT."
+            + (f" Received: {snippet!r}" if snippet else "")
+        )
 
     async def _write(self, payload: dict[str, Any]) -> None:
         if self._writer is None:
