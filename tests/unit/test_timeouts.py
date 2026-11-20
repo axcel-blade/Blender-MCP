@@ -262,7 +262,7 @@ def test_dispatch_passes_client_check_to_queue(monkeypatch):
     def fake_run(func, timeout, should_run=None):
         seen["should_run"] = should_run()
         seen["timeout"] = timeout
-        return {"success": True, "result": "ok"}
+        return {"success": True, "result": "ok"}, {}
 
     monkeypatch.setattr(bridge.execution_queue, "run_on_main_thread", fake_run)
     monkeypatch.setattr(bridge, "_prefs", lambda: None)

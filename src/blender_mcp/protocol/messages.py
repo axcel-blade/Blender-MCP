@@ -40,6 +40,8 @@ class BridgeResponse:
     error: str | None = None
     details: dict[str, Any] = field(default_factory=dict)
     duration_ms: float | None = None
+    # What the user changed by hand since the previous command (addon edit tracker).
+    user_edits: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> BridgeResponse:
@@ -51,6 +53,7 @@ class BridgeResponse:
             error=data.get("error") or data.get("message"),
             details=data.get("details") or {},
             duration_ms=data.get("duration_ms"),
+            user_edits=data.get("user_edits") or {},
         )
 
     def to_tool_result(self) -> dict[str, Any]:
@@ -61,6 +64,8 @@ class BridgeResponse:
         }
         if self.duration_ms is not None:
             payload["duration_ms"] = self.duration_ms
+        if self.user_edits:
+            payload["user_edits"] = self.user_edits
         if not self.success:
             payload["error_code"] = self.error_code or "OPERATION_FAILED"
             payload["error"] = self.error or "Unknown error"

@@ -341,6 +341,17 @@ def _timeout_response(
     }
 
 
+def _tracker_call(name: str, default: Any) -> Any:
+    """Run an edit_tracker function; tracking problems never fail a command."""
+    try:
+        from . import edit_tracker
+
+        return getattr(edit_tracker, name)()
+    except Exception as exc:  # noqa: BLE001
+        log(f"Edit tracking {name} failed: {exc}")
+        return default
+
+
 def _dispatch_request(
     message: dict[str, Any], client: socket.socket | None = None
 ) -> dict[str, Any]:
@@ -353,12 +364,22 @@ def _dispatch_request(
     _state["current_operation"] = command
     started = time.time()
 
-    def job():
-        return dispatch(command, params)
+    prefs = _prefs()
+    tracking = bool(getattr(prefs, "track_user_edits", True)) if prefs else True
 
-    timeout = request_timeout(message, _prefs())
+    def job():
+        # Runs on the main thread: compare with the scene as the last command left it,
+        # run this command, then remember the scene as this command left it.
+        edits = _tracker_call("collect", {}) if tracking else {}
+        try:
+            return dispatch(command, params), edits
+        finally:
+            if tracking:
+                _tracker_call("rebaseline", None)
+
+    timeout = request_timeout(message, prefs)
     try:
-        result = execution_queue.run_on_main_thread(
+        result, edits = execution_queue.run_on_main_thread(
             job, timeout=timeout, should_run=lambda: not client_gone(client)
         )
         duration_ms = (time.time() - started) * 1000.0
@@ -367,14 +388,17 @@ def _dispatch_request(
         if isinstance(result, dict) and "success" in result:
             payload = {"type": "response", "id": request_id, "duration_ms": duration_ms}
             payload.update(result)
-            return payload
-        return {
-            "type": "response",
-            "id": request_id,
-            "success": True,
-            "result": result,
-            "duration_ms": duration_ms,
-        }
+        else:
+            payload = {
+                "type": "response",
+                "id": request_id,
+                "success": True,
+                "result": result,
+                "duration_ms": duration_ms,
+            }
+        if edits:
+            payload["user_edits"] = edits
+        return payload
     except (execution_queue.JobNotStartedError, execution_queue.JobStillRunningError) as exc:
         duration_ms = (time.time() - started) * 1000.0
         is_started = isinstance(exc, execution_queue.JobStillRunningError)

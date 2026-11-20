@@ -33,6 +33,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         one that already started keeps running in Blender, so check the scene before
         retrying.
 
+        Safe execution mode (on by default in the addon) refuses, before anything runs,
+        scripts that start programs, delete files, use the network, register
+        classes/handlers/timers, change preferences, quit or reset Blender, or use
+        eval/exec/__import__/importlib. The error lists each line; rewrite without them.
+        If the user truly needs one, they turn the mode off in the addon preferences.
+
         Warning: this is not a secure sandbox. It can access files, network, and
         system capabilities available to the Blender process.
         """

@@ -73,7 +73,7 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
             }
         info = diag.get("result", diag)
         info = dict(info) if isinstance(info, dict) else {}
-        return ok(
+        status = ok(
             {
                 "server_version": __version__,
                 "blender_version": info.get("blender_version"),
@@ -85,6 +85,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
                 "warnings": addon_warnings(info),
             }
         )
+        if diag.get("user_edits"):
+            status["user_edits"] = diag["user_edits"]
+        return status
 
     @mcp.tool(name="get_guide")
     async def get_guide(name: str) -> dict[str, Any]:

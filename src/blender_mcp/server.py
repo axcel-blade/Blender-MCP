@@ -43,6 +43,10 @@ Scripts run in someone else's Blender, so:
   linked to a collection to appear.
 - Blender is Z-up, meters by default.
 
+A reply with `user_edits` means the user changed the scene by hand since your last call
+(objects added, removed, moved or edited; selection, mode or frame). Treat that as their
+intent: build on it, and don't undo or overwrite it unless they ask.
+
 Work like an artist: inspect first, put new work in its own named collection, never delete
 or overwrite the user's objects unless asked, then look (mode=material or rendered for
 color/lighting, angles for proportions), fix, and look again before reporting done.
