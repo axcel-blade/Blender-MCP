@@ -32,32 +32,85 @@ uv sync
 Write-Host "Installing Blender addon..."
 uv run blender-mcp install-addon
 
-function Add-McpServer([string]$ConfigPath) {
-    if (-not (Test-Path $ConfigPath)) { return $false }
-    $backup = "$ConfigPath.blender-mcp.bak"
-    Copy-Item $ConfigPath $backup -Force
-    $json = Get-Content $ConfigPath -Raw | ConvertFrom-Json
-    if (-not $json.mcpServers) {
-        $json | Add-Member -NotePropertyName mcpServers -NotePropertyValue (@{}) -Force
+function Set-JsonMcpServer([string]$ConfigPath, [string]$RootKey, $Entry) {
+    # Writes the blender-mcp entry under $RootKey. Creates the file if the
+    # client's folder exists (client installed) but the config does not.
+    $dir = Split-Path $ConfigPath -Parent
+    if (-not (Test-Path $dir)) { return }
+    $json = $null
+    if (Test-Path $ConfigPath) {
+        $raw = Get-Content $ConfigPath -Raw
+        if ($raw -and $raw.Trim()) {
+            try { $json = $raw | ConvertFrom-Json } catch {
+                Write-Warning "Skipped $ConfigPath (not plain JSON; comments?). Add blender-mcp manually."
+                return
+            }
+        }
+        Copy-Item $ConfigPath "$ConfigPath.blender-mcp.bak" -Force
     }
-    $entry = [pscustomobject]@{
-        command = "uv"
-        args = @("run", "--directory", "$RepoRoot", "blender-mcp")
+    if (-not $json) { $json = [pscustomobject]@{} }
+    if (-not $json.$RootKey) {
+        $json | Add-Member -NotePropertyName $RootKey -NotePropertyValue ([pscustomobject]@{}) -Force
     }
-    $json.mcpServers | Add-Member -NotePropertyName "blender-mcp" -NotePropertyValue $entry -Force
+    $json.$RootKey | Add-Member -NotePropertyName "blender-mcp" -NotePropertyValue $Entry -Force
     Save-JsonNoBom $ConfigPath $json
-    Write-Host "Updated $ConfigPath (backup: $backup)"
-    return $true
+    Write-Host "Configured $ConfigPath"
 }
 
-$cursor = Join-Path $env:USERPROFILE ".cursor\mcp.json"
-$claude = Join-Path $env:APPDATA "Claude\claude_desktop_config.json"
-[void](Add-McpServer $cursor)
-[void](Add-McpServer $claude)
+function Invoke-Quiet([scriptblock]$Block) {
+    $old = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try { & $Block *> $null; return ($LASTEXITCODE -eq 0) } catch { return $false } finally { $ErrorActionPreference = $old }
+}
+
+function Register-McpClients([string]$RepoRoot) {
+    $mcpArgs = @("run", "--directory", "$RepoRoot", "blender-mcp")
+    $std = [pscustomobject]@{ command = "uv"; args = $mcpArgs }
+    $vsc = [pscustomobject]@{ type = "stdio"; command = "uv"; args = $mcpArgs }
+
+    # Clients configured through a JSON "mcpServers" file
+    Set-JsonMcpServer (Join-Path $env:USERPROFILE ".cursor\mcp.json") "mcpServers" $std
+    Set-JsonMcpServer (Join-Path $env:APPDATA "Claude\claude_desktop_config.json") "mcpServers" $std
+    Set-JsonMcpServer (Join-Path $env:USERPROFILE ".codeium\windsurf\mcp_config.json") "mcpServers" $std
+    Set-JsonMcpServer (Join-Path $env:USERPROFILE ".gemini\settings.json") "mcpServers" $std
+    Set-JsonMcpServer (Join-Path $env:APPDATA "Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json") "mcpServers" $std
+    Set-JsonMcpServer (Join-Path $env:APPDATA "Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\mcp_settings.json") "mcpServers" $std
+
+    # VS Code / VS Code Insiders (Copilot agent mode) use "servers"
+    Set-JsonMcpServer (Join-Path $env:APPDATA "Code\User\mcp.json") "servers" $vsc
+    Set-JsonMcpServer (Join-Path $env:APPDATA "Code - Insiders\User\mcp.json") "servers" $vsc
+
+    # Claude Code: use its CLI (user scope)
+    if (Get-Command claude -ErrorAction SilentlyContinue) {
+        [void](Invoke-Quiet { claude mcp remove --scope user blender-mcp })
+        if (Invoke-Quiet { claude mcp add --scope user blender-mcp -- uv @mcpArgs }) {
+            Write-Host "Configured Claude Code (user scope)"
+        } else { Write-Warning "Claude Code: 'claude mcp add' failed. Add blender-mcp manually." }
+    }
+
+    # Codex: use its CLI, else append to ~/.codex/config.toml
+    if (Get-Command codex -ErrorAction SilentlyContinue) {
+        [void](Invoke-Quiet { codex mcp remove blender-mcp })
+        if (Invoke-Quiet { codex mcp add blender-mcp -- uv @mcpArgs }) {
+            Write-Host "Configured Codex"
+        } else { Write-Warning "Codex: 'codex mcp add' failed. Add blender-mcp manually." }
+    } else {
+        $toml = Join-Path $env:USERPROFILE ".codex\config.toml"
+        if ((Test-Path (Split-Path $toml)) -and -not ((Test-Path $toml) -and (Select-String -Path $toml -Pattern '^\[mcp_servers\.blender-mcp\]' -Quiet))) {
+            $p = $RepoRoot -replace '\\', '/'
+            $block = "`n[mcp_servers.blender-mcp]`ncommand = `"uv`"`nargs = [`"run`", `"--directory`", `"$p`", `"blender-mcp`"]`n"
+            [System.IO.File]::AppendAllText($toml, $block, (New-Object System.Text.UTF8Encoding $false))
+            Write-Host "Configured $toml"
+        }
+    }
+}
+
+Write-Host "Configuring AI clients..."
+Register-McpClients "$RepoRoot"
 
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Green
 Write-Host "1. Open Blender -> Edit -> Preferences -> Add-ons -> enable 'Blender MCP'"
 Write-Host "2. In the 3D Viewport press N -> AI / MCP -> Start"
-Write-Host "3. Restart your MCP client (Cursor / Claude Desktop)"
+Write-Host "3. Fully quit and reopen your AI client(s)"
 Write-Host "Done."
