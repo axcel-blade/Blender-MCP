@@ -25,7 +25,7 @@ Include:
 - OS and Blender version
 - `blender-mcp` version (`uv run blender-mcp version`)
 - MCP client (Cursor, Claude Desktop, etc.)
-- Relevant logs from the Blender **AI / MCP** panel
+- Relevant logs from the Blender **Blender MCP** panel
 - Redacted config (no secrets)
 
 ## What we can help with
