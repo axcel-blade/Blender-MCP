@@ -29,6 +29,11 @@ fi
 if [ -d "$INSTALL_DIR/.git" ]; then
   echo "Updating existing clone..."
   cd "$INSTALL_DIR"
+  if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+    STAMP="$(date +%Y%m%d-%H%M%S)"
+    echo "Local changes found; stashing them as blender-mcp-installer-$STAMP (restore with: git -C \"$INSTALL_DIR\" stash pop)"
+    git stash push -m "blender-mcp-installer-$STAMP"
+  fi
   git fetch origin
   git checkout "$BRANCH"
   git pull --ff-only origin "$BRANCH"
