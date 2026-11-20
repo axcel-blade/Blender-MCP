@@ -5,7 +5,7 @@ import pytest
 
 from blender_mcp.config import BridgeConfig
 from blender_mcp.exceptions import BlenderNotConnectedError, TimeoutError_
-from blender_mcp.protocol.client import BlenderBridgeClient
+from blender_mcp.protocol.client import DEFAULT_READER_LIMIT, BlenderBridgeClient
 
 
 @pytest.mark.asyncio
@@ -33,8 +33,10 @@ async def test_send_command_timeout():
 async def test_connect_authenticates_before_read_loop():
     client = BlenderBridgeClient(BridgeConfig(host="127.0.0.1", port=9876, connection_timeout=1.0))
     order: list[str] = []
+    open_kwargs: dict = {}
 
-    async def fake_open_connection(host, port):
+    async def fake_open_connection(host, port, **kwargs):
+        open_kwargs.update(kwargs)
         reader = AsyncMock()
         writer = MagicMock()
         writer.write = MagicMock()
@@ -69,3 +71,36 @@ async def test_connect_authenticates_before_read_loop():
     assert order[0] == "auth"
     assert "blender-bridge-reader" in order
     assert order.index("auth") < order.index("blender-bridge-reader")
+    assert open_kwargs.get("limit") == DEFAULT_READER_LIMIT
+
+
+@pytest.mark.asyncio
+async def test_read_loop_accepts_large_ndjson_payload():
+    """Regression: screenshot base64 lines exceed asyncio's default 64 KiB limit."""
+    client = BlenderBridgeClient(
+        BridgeConfig(host="127.0.0.1", port=9876, connection_timeout=1.0),
+        reader_limit=DEFAULT_READER_LIMIT,
+    )
+    large_b64 = "A" * (100 * 1024)
+    response_line = (
+        '{"type":"response","id":"req-1","success":true,'
+        f'"result":{{"image_base64":"{large_b64}"}}}}\n'
+    ).encode("utf-8")
+
+    reader = asyncio.StreamReader(limit=DEFAULT_READER_LIMIT)
+    reader.feed_data(response_line)
+    reader.feed_eof()
+    client._reader = reader
+    client._connected = True
+
+    loop = asyncio.get_running_loop()
+    future: asyncio.Future = loop.create_future()
+    client._pending["req-1"] = future
+
+    await client._read_loop()
+
+    assert future.done()
+    assert not isinstance(future.exception(), Exception) or future.exception() is None
+    response = future.result()
+    assert response.success is True
+    assert len(response.result["image_base64"]) == len(large_b64)

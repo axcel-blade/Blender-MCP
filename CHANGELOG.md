@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Raise the MCP bridge TCP reader limit so viewport/render screenshot base64 payloads are not truncated (fixes `Connection lost` / WinError 10054 during capture)
+- Actually downscale viewport screenshots to `max_size` instead of only returning the hint
+- Reload shared addon helpers (e.g. `screenshots`) on handler register so disable/enable picks up helper fixes
+
 ### Added
 
 - 

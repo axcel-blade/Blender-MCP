@@ -8,6 +8,33 @@ from pathlib import Path
 from typing import Any
 
 
+def _resize_png_if_needed(path: Path, max_size: int | None) -> bytes:
+    """Read PNG bytes, optionally downscaling so the longest edge <= max_size."""
+    data = path.read_bytes() if path.exists() else b""
+    if not data or max_size is None or max_size <= 0:
+        return data
+
+    import bpy
+
+    img = bpy.data.images.load(filepath=str(path), check_existing=False)
+    try:
+        width, height = int(img.size[0]), int(img.size[1])
+        longest = max(width, height)
+        if longest <= max_size:
+            return data
+
+        scale = max_size / float(longest)
+        new_w = max(1, int(round(width * scale)))
+        new_h = max(1, int(round(height * scale)))
+        img.scale(new_w, new_h)
+        img.filepath_raw = str(path)
+        img.file_format = "PNG"
+        img.save()
+        return path.read_bytes() if path.exists() else data
+    finally:
+        bpy.data.images.remove(img)
+
+
 def capture_viewport(
     *,
     max_size: int | None = 1024,
@@ -68,8 +95,7 @@ def capture_viewport(
     # restore shading
     space.shading.type = old_shading
 
-    data = out.read_bytes() if out.exists() else b""
-    # Optional downscale hint only — Blender writes full capture; clients can resize.
+    data = _resize_png_if_needed(out, max_size)
     result = {
         "path": str(out),
         "mime_type": "image/png",
