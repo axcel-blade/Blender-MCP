@@ -135,9 +135,27 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _make_console_output_safe() -> None:
+    """Prevent UnicodeEncodeError on legacy Windows consoles (cp1252 etc.).
+
+    Not applied to the stdio MCP server: there stdout carries the protocol and the
+    MCP library manages its own encoding.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(errors="replace")
+        except (ValueError, OSError):
+            pass
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if getattr(args, "command", None) not in (None, "run"):
+        _make_console_output_safe()
     if not getattr(args, "command", None):
         # Default to MCP stdio server for MCP client configs that call the console script.
         raise SystemExit(cmd_run(argparse.Namespace()))
