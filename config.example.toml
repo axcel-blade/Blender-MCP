@@ -9,6 +9,11 @@ retry_delay = 0.5
 heartbeat_interval = 15.0
 allow_remote = false
 
+# Per-command timeouts in seconds (max 3600). Renders, imports and exports already
+# default to 120-1800s; list a command here to change it.
+[bridge.command_timeouts]
+# render_animation = 3600
+
 [security]
 safe_execution_mode = true
 script_permission = "trusted"  # restricted | confirmation | trusted

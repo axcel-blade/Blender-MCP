@@ -89,8 +89,10 @@ def execute_blender_code(params: dict[str, Any]):
     if mode == "restricted":
         raise PermissionError("Script execution is restricted")
 
+    from .. import script_safety
+
     if preview_only:
-        return {
+        preview = {
             "preview_only": True,
             "code": code,
             "warning": (
@@ -98,6 +100,12 @@ def execute_blender_code(params: dict[str, Any]):
                 "network, and process capabilities available to Blender. Not a sandbox."
             ),
         }
+        if safe:
+            preview["refused_operations"] = [v.describe() for v in script_safety.check(code)]
+        return preview
+
+    if safe:
+        script_safety.enforce(code)  # PermissionError -> PERMISSION_DENIED, nothing ran
 
     stdout = io.StringIO()
     stderr = io.StringIO()

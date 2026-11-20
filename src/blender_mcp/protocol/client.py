@@ -17,6 +17,7 @@ from blender_mcp.exceptions import (
     TimeoutError_,
 )
 from blender_mcp.protocol.messages import BridgeRequest, BridgeResponse
+from blender_mcp.protocol.timeouts import RESPONSE_GRACE, no_reply_message, resolve_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -135,8 +136,15 @@ class BlenderBridgeClient:
         timeout: float | None = None,
     ) -> dict[str, Any]:
         await self.ensure_connected()
-        request = BridgeRequest(command=command, params=params or {})
-        timeout = timeout if timeout is not None else self.config.request_timeout
+        params = params or {}
+        timeout = resolve_timeout(
+            command,
+            params,
+            self.config.request_timeout,
+            self.config.command_timeouts,
+            explicit=timeout,
+        )
+        request = BridgeRequest(command=command, params=params, timeout=timeout)
 
         loop = asyncio.get_running_loop()
         future: asyncio.Future[BridgeResponse] = loop.create_future()
@@ -144,13 +152,18 @@ class BlenderBridgeClient:
 
         try:
             await self._write(request.to_dict())
-            response = await asyncio.wait_for(future, timeout=timeout)
+            # The addon enforces `timeout` itself and replies with a precise TIMEOUT
+            # (cancelled vs still running); the grace lets that reply arrive first.
+            grace = self.config.response_grace
+            if grace < 0:
+                grace = RESPONSE_GRACE
+            response = await asyncio.wait_for(future, timeout=timeout + grace)
         except TimeoutError as exc:
             self._pending.pop(request.id, None)
             self._last_error = f"Timeout waiting for {command}"
             raise TimeoutError_(
-                f"Timed out waiting for Blender response to '{command}'",
-                details={"command": command, "request_id": request.id},
+                no_reply_message(command, timeout),
+                details={"command": command, "request_id": request.id, "timeout": timeout},
             ) from exc
         except BlenderMCPError:
             self._pending.pop(request.id, None)
@@ -172,10 +185,13 @@ class BlenderBridgeClient:
                     code = ErrorCode(response.error_code)
                 except ValueError:
                     code = ErrorCode.OPERATION_FAILED
+            details: dict[str, Any] = dict(response.details or {"command": command})
+            if response.user_edits:
+                details["user_edits"] = response.user_edits
             raise BlenderMCPError(
                 response.error or "Blender operation failed",
                 code=code,
-                details=response.details or {"command": command},
+                details=details,
             )
         return result
 
