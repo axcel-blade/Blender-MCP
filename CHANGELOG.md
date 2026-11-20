@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-20
+
+### Fixed
+
+- `curl ... | sh` now works on Ubuntu and Debian, where `sh` is dash and rejected `set -o pipefail`.
+- The Windows installer configures Claude Desktop from the Microsoft Store (its config lives under `%LOCALAPPDATA%\Packages\Claude_*`).
+- The Windows installer stops with a clear message when `git`, `uv sync` or the addon install fails, instead of carrying on and installing a stale addon (for example when local changes block `git pull`).
+- Reinstalling to another folder now updates an existing Codex `config.toml` entry instead of keeping the old path.
+
+### Added
+
+- End-to-end installer test in Docker (Ubuntu 22.04/24.04, Debian 12, Fedora 41): the `Installer (Docker)` workflow and `tests/installer/docker-test.sh`.
+
 ## [1.2.0] - 2026-11-20
 
 ### Added

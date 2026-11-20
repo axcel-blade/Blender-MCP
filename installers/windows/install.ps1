@@ -18,6 +18,14 @@ function Ensure-Uv {
     }
 }
 
+function Assert-Exit([string]$What, [string]$Hint = "") {
+    if ($LASTEXITCODE -ne 0) {
+        $msg = "$What failed (exit code $LASTEXITCODE)."
+        if ($Hint) { $msg += " $Hint" }
+        throw $msg
+    }
+}
+
 function Save-JsonNoBom([string]$Path, $Object) {
     $text = $Object | ConvertTo-Json -Depth 20
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
@@ -28,9 +36,11 @@ Ensure-Uv
 Set-Location $RepoRoot
 Write-Host "Syncing project with uv (Python + deps from uv.lock)..."
 uv sync
+Assert-Exit "uv sync"
 
 Write-Host "Installing Blender addon..."
 uv run blender-mcp install-addon
+Assert-Exit "Installing the Blender addon"
 
 function Set-JsonMcpServer([string]$ConfigPath, [string]$RootKey, $Entry) {
     # Writes the blender-mcp entry under $RootKey. Creates the file if the
@@ -71,6 +81,13 @@ function Register-McpClients([string]$RepoRoot) {
     # Clients configured through a JSON "mcpServers" file
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".cursor\mcp.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:APPDATA "Claude\claude_desktop_config.json") "mcpServers" $std
+    # Microsoft Store (MSIX) Claude Desktop keeps its config in a virtualized AppData
+    $pkgs = Join-Path $env:LOCALAPPDATA "Packages"
+    if (Test-Path $pkgs) {
+        Get-ChildItem $pkgs -Directory -Filter "Claude_*" -ErrorAction SilentlyContinue | ForEach-Object {
+            Set-JsonMcpServer (Join-Path $_.FullName "LocalCache\Roaming\Claude\claude_desktop_config.json") "mcpServers" $std
+        }
+    }
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".codeium\windsurf\mcp_config.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".gemini\settings.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:APPDATA "Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json") "mcpServers" $std
@@ -96,10 +113,19 @@ function Register-McpClients([string]$RepoRoot) {
         } else { Write-Warning "Codex: 'codex mcp add' failed. Add blender-mcp manually." }
     } else {
         $toml = Join-Path $env:USERPROFILE ".codex\config.toml"
-        if ((Test-Path (Split-Path $toml)) -and -not ((Test-Path $toml) -and (Select-String -Path $toml -Pattern '^\[mcp_servers\.blender-mcp\]' -Quiet))) {
+        if (Test-Path (Split-Path $toml)) {
             $p = $RepoRoot -replace '\\', '/'
-            $block = "`n[mcp_servers.blender-mcp]`ncommand = `"uv`"`nargs = [`"run`", `"--directory`", `"$p`", `"blender-mcp`"]`n"
-            [System.IO.File]::AppendAllText($toml, $block, (New-Object System.Text.UTF8Encoding $false))
+            $text = ""
+            if (Test-Path $toml) {
+                $text = [System.IO.File]::ReadAllText($toml)
+                Copy-Item $toml "$toml.blender-mcp.bak" -Force
+            }
+            # Drop any existing blender-mcp table (and sub-tables) so a reinstall updates the path.
+            $text = [regex]::Replace($text, '(?ms)^\[mcp_servers\.blender-mcp(?:\.[^\]]*)?\][^\r\n]*\r?\n.*?(?=^\[(?!mcp_servers\.blender-mcp[\].])|\z)', '')
+            $text = $text.TrimEnd()
+            if ($text) { $text += "`n`n" }
+            $text += "[mcp_servers.blender-mcp]`ncommand = `"uv`"`nargs = [`"run`", `"--directory`", `"$p`", `"blender-mcp`"]`n"
+            [System.IO.File]::WriteAllText($toml, $text, (New-Object System.Text.UTF8Encoding $false))
             Write-Host "Configured $toml"
         }
     }

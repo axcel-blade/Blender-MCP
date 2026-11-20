@@ -59,11 +59,18 @@ for path, key, entry in targets:
     print(f"Configured {path}")
 toml = os.path.join(home, ".codex", "config.toml")
 if not shutil.which("codex") and os.path.isdir(os.path.dirname(toml)):
+    import re
     text = open(toml, encoding="utf-8").read() if os.path.isfile(toml) else ""
-    if "[mcp_servers.blender-mcp]" not in text:
-        with open(toml, "a", encoding="utf-8") as f:
-            f.write("\n[mcp_servers.blender-mcp]\ncommand = \"uv\"\nargs = " + json.dumps(args) + "\n")
-        print(f"Configured {toml}")
+    if text:
+        shutil.copyfile(toml, toml + ".blender-mcp.bak")
+    # Drop any existing blender-mcp table (and its sub-tables), then append a fresh one,
+    # so a reinstall to another folder updates the path instead of keeping the old one.
+    text = re.sub(r"(?ms)^\[mcp_servers\.blender-mcp(?:\.[^\]]*)?\][^\n]*\n.*?(?=^\[(?!mcp_servers\.blender-mcp[\].])|\Z)", "", text)
+    text = text.rstrip() + ("\n\n" if text.strip() else "")
+    text += "[mcp_servers.blender-mcp]\ncommand = \"uv\"\nargs = " + json.dumps(args) + "\n"
+    with open(toml, "w", encoding="utf-8") as f:
+        f.write(text)
+    print(f"Configured {toml}")
 PY
   if command -v claude >/dev/null 2>&1; then
     claude mcp remove --scope user blender-mcp >/dev/null 2>&1 || true
