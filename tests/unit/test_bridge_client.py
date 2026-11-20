@@ -85,7 +85,7 @@ async def test_read_loop_accepts_large_ndjson_payload():
     response_line = (
         '{"type":"response","id":"req-1","success":true,'
         f'"result":{{"image_base64":"{large_b64}"}}}}\n'
-    ).encode("utf-8")
+    ).encode()
 
     reader = asyncio.StreamReader(limit=DEFAULT_READER_LIMIT)
     reader.feed_data(response_line)
