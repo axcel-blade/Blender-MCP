@@ -15,6 +15,7 @@ def diagnose_blender_connection(params: dict[str, Any]) -> dict[str, Any]:
     from .. import bridge_server
 
     from ..utils.prefs import get_preferences
+    from . import _REGISTRY
 
     prefs = get_preferences()
 
@@ -32,4 +33,5 @@ def diagnose_blender_connection(params: dict[str, Any]) -> dict[str, Any]:
             "polyhaven": getattr(prefs, "use_polyhaven", True) if prefs else True,
         },
         "api_available": True,
+        "commands": sorted(_REGISTRY),
     }

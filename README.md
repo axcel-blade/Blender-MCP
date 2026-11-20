@@ -60,7 +60,7 @@ uv run blender-mcp install-addon
 ```json
 {
   "mcpServers": {
-    "blender": {
+    "blender-mcp": {
       "command": "uv",
       "args": ["run", "--directory", "C:/path/to/Blender-MCP", "blender-mcp"]
     }

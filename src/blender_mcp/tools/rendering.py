@@ -7,6 +7,7 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 from blender_mcp.tools.registry import AppContext, call_blender
+from blender_mcp.utils.results import to_image_content
 
 
 def register(mcp: FastMCP, ctx: AppContext) -> None:
@@ -18,45 +19,55 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         resolution_percentage: int = 50,
         write_still: bool = True,
         output_path: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> list[Any]:
         """Render the current frame."""
-        return await call_blender(
-            ctx,
-            "render_scene",
-            {
-                "engine": engine,
-                "samples": samples,
-                "resolution_percentage": resolution_percentage,
-                "write_still": write_still,
-                "output_path": output_path,
-            },
-            group="rendering",
+        return to_image_content(
+            await call_blender(
+                ctx,
+                "render_scene",
+                {
+                    "engine": engine,
+                    "samples": samples,
+                    "resolution_percentage": resolution_percentage,
+                    "write_still": write_still,
+                    "output_path": output_path,
+                },
+                group="rendering",
+            )
         )
 
     @mcp.tool(name="render_preview")
     async def render_preview(
         resolution_percentage: int = 25,
         samples: int = 16,
-    ) -> dict[str, Any]:
+    ) -> list[Any]:
         """Render a fast preview image."""
-        return await call_blender(
-            ctx,
-            "render_preview",
-            {"resolution_percentage": resolution_percentage, "samples": samples, "preview": True},
-            group="rendering",
+        return to_image_content(
+            await call_blender(
+                ctx,
+                "render_preview",
+                {
+                    "resolution_percentage": resolution_percentage,
+                    "samples": samples,
+                    "preview": True,
+                },
+                group="rendering",
+            )
         )
 
     @mcp.tool(name="render_final")
     async def render_final(
         output_path: str | None = None,
         samples: int | None = None,
-    ) -> dict[str, Any]:
+    ) -> list[Any]:
         """Render a higher-quality still."""
-        return await call_blender(
-            ctx,
-            "render_final",
-            {"output_path": output_path, "samples": samples, "final": True},
-            group="rendering",
+        return to_image_content(
+            await call_blender(
+                ctx,
+                "render_final",
+                {"output_path": output_path, "samples": samples, "final": True},
+                group="rendering",
+            )
         )
 
     @mcp.tool(name="render_animation")
@@ -95,6 +106,6 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         return await call_blender(ctx, "set_output_path", {"path": path}, group="rendering")
 
     @mcp.tool(name="get_render_result")
-    async def get_render_result() -> dict[str, Any]:
+    async def get_render_result() -> list[Any]:
         """Return the last render result path/metadata."""
-        return await call_blender(ctx, "get_render_result", {}, group="rendering")
+        return to_image_content(await call_blender(ctx, "get_render_result", {}, group="rendering"))

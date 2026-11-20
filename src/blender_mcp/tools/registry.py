@@ -25,6 +25,7 @@ def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
         assets,
         cameras,
         collections,
+        generation,
         geometry_nodes,
         import_export,
         lighting,
@@ -36,6 +37,7 @@ def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
         scene,
         screenshots,
         scripting,
+        status,
     )
 
     modules = [
@@ -50,10 +52,12 @@ def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
         rendering,
         animation,
         assets,
+        generation,
         import_export,
         collections,
         screenshots,
         scripting,
+        status,
     ]
     for module in modules:
         module.register(mcp, ctx)

@@ -15,6 +15,12 @@ from blender_mcp.tools.registry import AppContext, register_all_tools
 INSTRUCTIONS = """
 You are connected to Blender through Blender MCP.
 
+Start with get_addon_status (versions, warnings, enabled libraries and generators).
+Short guides are available via get_guide (bpy, materials, scene).
+Screenshot tools return real images: look at them to check your work.
+Assets: search_assets, then import_external_asset (Poly Haven, Sketchfab, Poly Pizza).
+generate_3d makes ONE new model from text/image (1-3 min, may cost a credit).
+
 Visual verification workflow (required when screenshots are available):
 1. Inspect the scene before changing user content.
 2. Prefer creating a dedicated collection for new work.

@@ -69,7 +69,7 @@ function Add-McpServer([string]$ConfigPath, [string]$RepoRoot) {
         command = "uv"
         args    = @("run", "--directory", "$RepoRoot", "blender-mcp")
     }
-    $json.mcpServers | Add-Member -NotePropertyName blender -NotePropertyValue $entry -Force
+    $json.mcpServers | Add-Member -NotePropertyName "blender-mcp" -NotePropertyValue $entry -Force
     Save-JsonNoBom $ConfigPath $json
     Write-Host "Updated $ConfigPath (backup: $backup)"
     return $true
