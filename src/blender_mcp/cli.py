@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import json
 import shutil
 import sys
@@ -145,10 +146,8 @@ def _make_console_output_safe() -> None:
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is None:
             continue
-        try:
+        with contextlib.suppress(ValueError, OSError):
             reconfigure(errors="replace")
-        except (ValueError, OSError):
-            pass
 
 
 def main(argv: list[str] | None = None) -> None:
