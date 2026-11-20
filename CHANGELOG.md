@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-11-20
+
+### Fixed
+
+- Re-running the installer no longer fails when local changes block `git pull`: they are stashed (with restore instructions) before updating.
+- The Windows installer stops running `blender-mcp` processes that lock `.venv\Scriptslender-mcp.exe` before `uv sync` (previously "os error 32"), and ignores an unrelated activated `VIRTUAL_ENV`.
+- The site's copy-command button works on insecure (non-HTTPS) origins.
+
 ## [1.2.1] - 2026-11-20
 
 ### Fixed
