@@ -39,8 +39,11 @@ function Ensure-Repo {
         Write-Host "Updating existing clone..."
         Set-Location $InstallDir
         git fetch origin
+        Assert-Exit "git fetch"
         git checkout $Branch
+        Assert-Exit "git checkout $Branch" "Local changes in $InstallDir block the update. Commit or stash them (git -C `"$InstallDir`" stash), then re-run."
         git pull --ff-only origin $Branch
+        Assert-Exit "git pull" "Local changes in $InstallDir block the update. Commit or stash them (git -C `"$InstallDir`" stash), then re-run."
         return
     }
     if (Test-Path $InstallDir) {
@@ -48,7 +51,16 @@ function Ensure-Repo {
     }
     Write-Host "Cloning $RepoUrl ($Branch)..."
     git clone --branch $Branch --single-branch $RepoUrl $InstallDir
+    Assert-Exit "git clone"
     Set-Location $InstallDir
+}
+
+function Assert-Exit([string]$What, [string]$Hint = "") {
+    if ($LASTEXITCODE -ne 0) {
+        $msg = "$What failed (exit code $LASTEXITCODE)."
+        if ($Hint) { $msg += " $Hint" }
+        throw $msg
+    }
 }
 
 function Save-JsonNoBom([string]$Path, $Object) {
@@ -96,6 +108,13 @@ function Register-McpClients([string]$RepoRoot) {
     # Clients configured through a JSON "mcpServers" file
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".cursor\mcp.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:APPDATA "Claude\claude_desktop_config.json") "mcpServers" $std
+    # Microsoft Store (MSIX) Claude Desktop keeps its config in a virtualized AppData
+    $pkgs = Join-Path $env:LOCALAPPDATA "Packages"
+    if (Test-Path $pkgs) {
+        Get-ChildItem $pkgs -Directory -Filter "Claude_*" -ErrorAction SilentlyContinue | ForEach-Object {
+            Set-JsonMcpServer (Join-Path $_.FullName "LocalCache\Roaming\Claude\claude_desktop_config.json") "mcpServers" $std
+        }
+    }
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".codeium\windsurf\mcp_config.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".gemini\settings.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:APPDATA "Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json") "mcpServers" $std
@@ -139,9 +158,11 @@ Ensure-Repo
 
 Write-Host "Syncing project with uv..."
 uv sync
+Assert-Exit "uv sync"
 
 Write-Host "Installing Blender addon..."
 uv run blender-mcp install-addon
+Assert-Exit "Installing the Blender addon"
 
 Write-Host "Configuring AI clients..."
 Register-McpClients $InstallDir
