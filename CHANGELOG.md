@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-20
+
+### Added
+
+- The Windows, macOS and Linux installers now register `blender-mcp` automatically in every AI client they find: Claude Desktop, Claude Code, Cursor, Windsurf, VS Code / VS Code Insiders, Cline, Roo Code, Gemini CLI and Codex. Missing configs are created, existing ones backed up to `*.blender-mcp.bak`, and other servers kept.
+
+### Changed
+
+- The Blender sidebar tab and panel are renamed from "AI / MCP" to "Blender MCP".
+
 ## [1.1.0] - 2026-11-20
 
 ### Added
