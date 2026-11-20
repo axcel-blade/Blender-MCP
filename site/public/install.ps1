@@ -70,6 +70,24 @@ function Assert-Exit([string]$What, [string]$Hint = "") {
     }
 }
 
+function Stop-RunningServers([string]$Root) {
+    # A running MCP server (started by Claude, Cursor, etc.) keeps .venv\Scripts\blender-mcp.exe
+    # locked, and uv sync then fails with "os error 32". Stop those processes first.
+    $venv = [System.IO.Path]::GetFullPath((Join-Path $Root ".venv")).TrimEnd('\') + '\'
+    $procs = Get-Process -ErrorAction SilentlyContinue | Where-Object {
+        try { $_.Path -and $_.Path.StartsWith($venv, [System.StringComparison]::OrdinalIgnoreCase) } catch { $false }
+    }
+    if (-not $procs) { return }
+    Write-Host "Stopping running Blender MCP processes that lock the venv (your MCP client will restart them):" -ForegroundColor Yellow
+    foreach ($p in $procs) {
+        Write-Host "  $($p.ProcessName) (PID $($p.Id))"
+        try { Stop-Process -Id $p.Id -Force -ErrorAction Stop } catch {
+            Write-Host "  Could not stop PID $($p.Id): $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+    Start-Sleep -Milliseconds 500
+}
+
 function Save-JsonNoBom([string]$Path, $Object) {
     $text = $Object | ConvertTo-Json -Depth 20
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
@@ -173,8 +191,11 @@ Ensure-Uv
 Ensure-Repo
 
 Write-Host "Syncing project with uv..."
+Stop-RunningServers $InstallDir
+# An activated venv from another checkout only triggers a uv warning; ignore it.
+Remove-Item Env:VIRTUAL_ENV -ErrorAction SilentlyContinue
 uv sync
-Assert-Exit "uv sync"
+Assert-Exit "uv sync" "If a file is still locked, close Claude/Cursor/other MCP clients and re-run."
 
 Write-Host "Installing Blender addon..."
 uv run blender-mcp install-addon
