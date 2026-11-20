@@ -23,6 +23,11 @@ class BridgeConfig(BaseModel):
     auth_token: str = ""
     connection_timeout: float = 5.0
     request_timeout: float = 60.0
+    # Per-command timeouts in seconds, e.g. {"render_animation": 3600}. Overrides the
+    # built-in slow-command defaults in blender_mcp.protocol.timeouts.
+    command_timeouts: dict[str, float] = Field(default_factory=dict)
+    # Extra seconds to wait past a command's timeout for the addon's own timeout reply.
+    response_grace: float = 10.0
     retry_count: int = 3
     retry_delay: float = 0.5
     heartbeat_interval: float = 15.0
@@ -108,6 +113,7 @@ class Settings(BaseSettings):
     auth_token: str = Field(default="", alias="AUTH_TOKEN")
     connection_timeout: float = Field(default=5.0, alias="CONNECTION_TIMEOUT")
     request_timeout: float = Field(default=60.0, alias="REQUEST_TIMEOUT")
+    command_timeouts: dict[str, float] = Field(default_factory=dict)
     retry_count: int = Field(default=3, alias="RETRY_COUNT")
     retry_delay: float = Field(default=0.5, alias="RETRY_DELAY")
     heartbeat_interval: float = Field(default=15.0, alias="HEARTBEAT_INTERVAL")
@@ -179,6 +185,7 @@ class Settings(BaseSettings):
             auth_token=self.auth_token,
             connection_timeout=self.connection_timeout,
             request_timeout=self.request_timeout,
+            command_timeouts=dict(self.command_timeouts),
             retry_count=self.retry_count,
             retry_delay=self.retry_delay,
             heartbeat_interval=self.heartbeat_interval,
@@ -261,6 +268,7 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
                 "auth_token": bridge.get("auth_token", ""),
                 "connection_timeout": bridge.get("connection_timeout", 5.0),
                 "request_timeout": bridge.get("request_timeout", 60.0),
+                "command_timeouts": bridge.get("command_timeouts", {}),
                 "retry_count": bridge.get("retry_count", 3),
                 "retry_delay": bridge.get("retry_delay", 0.5),
                 "heartbeat_interval": bridge.get("heartbeat_interval", 15.0),

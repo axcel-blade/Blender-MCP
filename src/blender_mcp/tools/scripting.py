@@ -28,6 +28,11 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         ``result`` variable if set, else the last expression's value, plus stdout and a
         traceback on error. Return dicts/lists. Batch related steps into one script.
 
+        ``timeout``: seconds to allow (default 60, max 3600). Raise it for long work such
+        as bakes or heavy booleans. A script that times out before starting is cancelled;
+        one that already started keeps running in Blender, so check the scene before
+        retrying.
+
         Warning: this is not a secure sandbox. It can access files, network, and
         system capabilities available to the Blender process.
         """

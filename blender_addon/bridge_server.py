@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import select
 import socket
 import threading
 import time
@@ -13,6 +14,8 @@ from . import execution_queue
 
 DEFAULT_PORT = 9877
 MAX_REQUEST_BYTES = 1_048_576
+MIN_TIMEOUT = 1.0
+MAX_TIMEOUT = 3600.0
 
 _server_socket: socket.socket | None = None
 _server_thread: threading.Thread | None = None
@@ -247,7 +250,7 @@ def _handle_client(client: socket.socket, addr: Any) -> None:
                     continue
 
                 if msg_type == "request":
-                    response = _dispatch_request(message)
+                    response = _dispatch_request(message, client)
                     _send(client, response)
                     continue
     except Exception as exc:  # noqa: BLE001
@@ -278,7 +281,69 @@ def _authenticate(token: str) -> tuple[bool, dict[str, Any]]:
     }
 
 
-def _dispatch_request(message: dict[str, Any]) -> dict[str, Any]:
+def client_gone(client: socket.socket | None) -> bool:
+    """True when the peer has closed ``client``. Never blocks.
+
+    Safe to call while the client's handler thread is waiting on a job: that thread
+    is not reading, so readable data is either the next request (still connected)
+    or EOF (gone).
+    """
+    if client is None:
+        return False
+    try:
+        readable, _, _ = select.select([client], [], [], 0)
+        if not readable:
+            return False
+        return client.recv(1, socket.MSG_PEEK) == b""
+    except (BlockingIOError, InterruptedError, TimeoutError):
+        return False
+    except (OSError, ValueError):
+        return True
+
+
+def request_timeout(message: dict[str, Any], prefs: Any) -> float:
+    """The request's own ``timeout`` if valid, else the addon preference."""
+    default = float(getattr(prefs, "execution_timeout", 60.0) if prefs else 60.0)
+    value = message.get("timeout")
+    try:
+        seconds = float(value) if value is not None else default
+    except (TypeError, ValueError):
+        seconds = default
+    if seconds != seconds or seconds <= 0:  # NaN or non-positive
+        seconds = default
+    return max(MIN_TIMEOUT, min(seconds, MAX_TIMEOUT))
+
+
+def _timeout_response(
+    request_id: str, command: str, seconds: float, started: bool, duration_ms: float
+) -> dict[str, Any]:
+    if started:
+        error = (
+            f"'{command}' is still running in Blender after {seconds:g}s. It can't be "
+            "interrupted from here and will finish on its own. Check the scene "
+            "(get_scene_info or look) before retrying, or the work may happen twice. "
+            "For long jobs pass a larger timeout or split the work into smaller steps."
+        )
+    else:
+        error = (
+            f"'{command}' did not start within {seconds:g}s because Blender was busy with "
+            "earlier work, so it was cancelled and nothing changed. Retry once Blender "
+            "is free."
+        )
+    return {
+        "type": "response",
+        "id": request_id,
+        "success": False,
+        "error_code": "TIMEOUT",
+        "error": error,
+        "details": {"command": command, "timeout": seconds, "started": started},
+        "duration_ms": duration_ms,
+    }
+
+
+def _dispatch_request(
+    message: dict[str, Any], client: socket.socket | None = None
+) -> dict[str, Any]:
     from .handlers import dispatch
 
     request_id = str(message.get("id", ""))
@@ -291,10 +356,11 @@ def _dispatch_request(message: dict[str, Any]) -> dict[str, Any]:
     def job():
         return dispatch(command, params)
 
+    timeout = request_timeout(message, _prefs())
     try:
-        prefs = _prefs()
-        timeout = float(getattr(prefs, "execution_timeout", 60.0) if prefs else 60.0)
-        result = execution_queue.run_on_main_thread(job, timeout=timeout)
+        result = execution_queue.run_on_main_thread(
+            job, timeout=timeout, should_run=lambda: not client_gone(client)
+        )
         duration_ms = (time.time() - started) * 1000.0
         _state["last_duration_ms"] = duration_ms
         _state["current_operation"] = ""
@@ -308,6 +374,26 @@ def _dispatch_request(message: dict[str, Any]) -> dict[str, Any]:
             "success": True,
             "result": result,
             "duration_ms": duration_ms,
+        }
+    except (execution_queue.JobNotStartedError, execution_queue.JobStillRunningError) as exc:
+        duration_ms = (time.time() - started) * 1000.0
+        is_started = isinstance(exc, execution_queue.JobStillRunningError)
+        # A job still running keeps the operation label until it finishes.
+        if not is_started:
+            _state["current_operation"] = ""
+        _state["last_duration_ms"] = duration_ms
+        _state["last_error"] = f"{command} timed out after {timeout:g}s"
+        log(_state["last_error"] + (" (still running)" if is_started else " (cancelled)"))
+        return _timeout_response(request_id, command, timeout, is_started, duration_ms)
+    except execution_queue.JobSkippedError:
+        _state["current_operation"] = ""
+        log(f"Skipped {command}: client disconnected")
+        return {
+            "type": "response",
+            "id": request_id,
+            "success": False,
+            "error_code": "CONNECTION_ERROR",
+            "error": f"'{command}' was skipped because the client disconnected before it ran.",
         }
     except Exception as exc:  # noqa: BLE001
         duration_ms = (time.time() - started) * 1000.0

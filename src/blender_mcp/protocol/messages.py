@@ -16,14 +16,19 @@ class BridgeRequest:
     command: str
     params: dict[str, Any] = field(default_factory=dict)
     id: str = field(default_factory=new_request_id)
+    # Seconds the addon may spend on this request (queued + running). None: addon default.
+    timeout: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "type": "request",
             "id": self.id,
             "command": self.command,
             "params": self.params,
         }
+        if self.timeout is not None:
+            payload["timeout"] = self.timeout
+        return payload
 
 
 @dataclass
