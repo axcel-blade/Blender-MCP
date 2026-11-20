@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-11-20
+
+### Changed
+
+- The one-line installers (`install.ps1`, `install.sh`) now install from `main` instead of `develop`. Set `BLENDER_MCP_BRANCH` to use another branch.
+- The scripts in `installers/` check out and fast-forward `main` (or `BLENDER_MCP_BRANCH`) before installing, and stop if the checkout is blocked by local changes.
+
 ## [1.2.2] - 2026-11-20
 
 ### Fixed

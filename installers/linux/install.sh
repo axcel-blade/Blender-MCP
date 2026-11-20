@@ -3,6 +3,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 echo "Blender MCP installer (Linux)"
 
+BRANCH="${BLENDER_MCP_BRANCH:-main}"
+if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  echo "Checking out $BRANCH..."
+  git -C "$ROOT" fetch origin "$BRANCH" || echo "warning: could not fetch $BRANCH" >&2
+  git -C "$ROOT" checkout "$BRANCH"
+  git -C "$ROOT" pull --ff-only origin "$BRANCH" || echo "warning: could not fast-forward $BRANCH" >&2
+fi
+
 if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
   export PATH="$HOME/.local/bin:$PATH"

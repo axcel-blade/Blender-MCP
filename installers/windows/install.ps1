@@ -7,6 +7,18 @@ $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 
 Write-Host "Blender MCP installer for Windows" -ForegroundColor Cyan
 
+$Branch = if ($env:BLENDER_MCP_BRANCH) { $env:BLENDER_MCP_BRANCH } else { "main" }
+git -C $RepoRoot rev-parse --git-dir *> $null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "Checking out $Branch..."
+    git -C $RepoRoot fetch origin $Branch
+    if ($LASTEXITCODE -ne 0) { Write-Warning "Could not fetch $Branch" }
+    git -C $RepoRoot checkout $Branch
+    if ($LASTEXITCODE -ne 0) { throw "git checkout $Branch failed. Commit or stash local changes and re-run." }
+    git -C $RepoRoot pull --ff-only origin $Branch
+    if ($LASTEXITCODE -ne 0) { Write-Warning "Could not fast-forward $Branch" }
+}
+
 function Ensure-Uv {
     if (Get-Command uv -ErrorAction SilentlyContinue) { return }
     Write-Host "Installing uv..."
