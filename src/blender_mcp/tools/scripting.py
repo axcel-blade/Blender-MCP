@@ -21,7 +21,12 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         preview_only: bool = False,
         timeout: float | None = None,
     ) -> dict[str, Any]:
-        """Execute Python code inside Blender when script permissions allow it.
+        """Run Python in the live Blender with the full bpy API. The primary tool:
+        anything Blender can do is reachable here.
+
+        bpy, mathutils, C (bpy.context) and D (bpy.data) are preloaded. Returns the
+        ``result`` variable if set, else the last expression's value, plus stdout and a
+        traceback on error. Return dicts/lists. Batch related steps into one script.
 
         Warning: this is not a secure sandbox. It can access files, network, and
         system capabilities available to the Blender process.

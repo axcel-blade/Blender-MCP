@@ -10,28 +10,45 @@ from blender_mcp.logging_config import setup_logging
 from blender_mcp.prompts.registry import register_prompts
 from blender_mcp.protocol.client import BlenderBridgeClient
 from blender_mcp.resources.registry import register_resources
-from blender_mcp.tools.registry import AppContext, register_all_tools
+from blender_mcp.tools.registry import AppContext, apply_tool_profile, register_all_tools
 
 INSTRUCTIONS = """
-You are connected to Blender through Blender MCP.
+Blender MCP drives the user's live Blender. execute_blender_code runs Python there with the
+full bpy API (bpy, mathutils, C=bpy.context, D=bpy.data preloaded), so anything Blender can
+do, you can do. look shows you the result. Use both freely.
 
-Start with get_addon_status (versions, warnings, enabled libraries and generators).
-Short guides are available via get_guide (bpy, materials, scene).
-Screenshot tools return real images: look at them to check your work.
+Start: get_addon_status (versions, warnings, libraries, generators), then get_scene_info.
+
+execute_blender_code returns the `result` variable if you set one, else the value of the
+last expression, plus stdout and a traceback on error. Return dicts/lists, not prints.
+Batch related work into one script; read the traceback and retry instead of guessing.
+
+Scripts run in someone else's Blender, so:
+- Find shader nodes by type, never by name (names are localized):
+  `next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")`.
+- Principled BSDF input names changed in 4.x ("Specular" -> "Specular IOR Level",
+  "Emission" -> "Emission Color"); check `"X" in node.inputs` before setting.
+- Never hardcode enum identifiers; read them, e.g.
+  `[i.identifier for i in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]`.
+  Assign scene.render.engine inside try/except TypeError; the message lists valid engines.
+- Material color goes on shader node inputs; material.diffuse_color is viewport-only.
+- Prefer bpy.data over bpy.ops. Operators depend on mode, active object and selection:
+  set them explicitly or use bpy.context.temp_override(...).
+- Call bpy.context.view_layer.update() before reading matrix_world or evaluated data.
+- In Edit Mode use bmesh and bmesh.update_edit_mesh(); new bpy.data objects must be
+  linked to a collection to appear.
+- Blender is Z-up, meters by default.
+
+Work like an artist: inspect first, put new work in its own named collection, never delete
+or overwrite the user's objects unless asked, then look (mode=material or rendered for
+color/lighting, angles for proportions), fix, and look again before reporting done.
+Images stay in context: max_size 384-512 is plenty for layout checks.
+
 Assets: search_assets, then import_external_asset (Poly Haven, Sketchfab, Poly Pizza).
-generate_3d makes ONE new model from text/image (1-3 min, may cost a credit).
-
-Visual verification workflow (required when screenshots are available):
-1. Inspect the scene before changing user content.
-2. Prefer creating a dedicated collection for new work.
-3. Perform modeling/material/lighting/camera operations with meaningful names.
-4. Capture a viewport or camera screenshot.
-5. Inspect the image, fix issues, and capture again.
-6. Only then report completion.
-
-Do not delete existing user objects unless explicitly asked.
-Prefer dedicated tools over execute_blender_code.
-execute_blender_code is powerful and not a secure sandbox.
+generate_3d makes ONE new textured model from text or an image (1-3 min, may cost a
+credit), never a whole scene or the ground. Imported and generated models arrive at
+arbitrary scale: read their world bounding box, scale them, and set them on the ground.
+More reference: get_guide (bpy, materials, scene).
 """.strip()
 
 
@@ -62,11 +79,13 @@ def create_server(settings: Settings | None = None) -> FastMCP:
                 "port": settings.port,
                 "safe_execution_mode": settings.safe_execution_mode,
                 "script_permission": str(settings.script_permission),
+                "tool_profile": settings.tool_profile,
                 "tool_groups": settings.tool_groups.model_dump(),
                 "auth_configured": bool(settings.auth_token),
             },
         }
 
+    apply_tool_profile(mcp, settings.tool_profile)
     return mcp
 
 
