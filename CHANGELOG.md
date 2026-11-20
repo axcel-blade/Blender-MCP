@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-20
+
 ### Added
 
 - Tool profiles. The default `core` profile exposes 12 tools centred on `execute_blender_code` and `look`; set `BLENDER_MCP_TOOL_PROFILE=full` (or `[tools] profile = "full"`) for all ~170 specialised tools.
