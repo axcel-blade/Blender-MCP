@@ -5,8 +5,8 @@ def test_default_settings(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     settings = load_settings(tmp_path / "missing.toml")
     assert settings.host == "127.0.0.1"
-    assert settings.port == 9876
-    assert settings.script_permission == ScriptPermission.RESTRICTED
+    assert settings.port == 9877
+    assert settings.script_permission == ScriptPermission.TRUSTED
     assert settings.tool_groups.scene is True
 
 

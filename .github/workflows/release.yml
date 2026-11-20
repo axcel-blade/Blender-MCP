@@ -92,6 +92,22 @@ jobs:
           if n != 1:
               raise SystemExit("Failed to bump __version__")
           init.write_text(init_text, encoding="utf-8")
+          # Keep the Blender addon in step; get_addon_status warns on mismatch.
+          addon = pathlib.Path("blender_addon/__init__.py")
+          addon_text = addon.read_text(encoding="utf-8")
+          addon_text, n1 = re.subn(
+              r'ADDON_VERSION = "[^"]+"', f'ADDON_VERSION = "{version}"', addon_text, count=1
+          )
+          core = re.match(r"(\d+)\.(\d+)\.(\d+)", version).groups()
+          addon_text, n2 = re.subn(
+              r'"version": \(\d+, \d+, \d+\)',
+              f'"version": ({core[0]}, {core[1]}, {core[2]})',
+              addon_text,
+              count=1,
+          )
+          if n1 != 1 or n2 != 1:
+              raise SystemExit("Failed to bump addon version")
+          addon.write_text(addon_text, encoding="utf-8")
           print(f"Bumped to {version}")
           PY
 
@@ -143,7 +159,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml src/blender_mcp/__init__.py CHANGELOG.md uv.lock || true
+          git add pyproject.toml src/blender_mcp/__init__.py blender_addon/__init__.py CHANGELOG.md uv.lock || true
           git diff --staged --quiet && echo "No version file changes to commit" && exit 0
           git commit -m "chore(release): ${{ steps.meta.outputs.tag }}"
           git push origin "HEAD:${{ inputs.branch }}"

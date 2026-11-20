@@ -50,30 +50,53 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         asset_id: str,
         asset_type: str | None = None,
         resolution: str = "1k",
+        target_size: float | None = None,
+        apply_to: list[str] | None = None,
+        ground: bool = True,
+        collection: str | None = None,
     ) -> dict[str, Any]:
-        """Download metadata/URLs then ask Blender to import when a local path is available."""
+        """Download an asset from Poly Haven, Sketchfab or Poly Pizza and import it into Blender.
+
+        - Models: imported, optionally scaled so the longest side equals ``target_size``
+          (meters) and placed on the ground. The reply includes ``world_bounding_box``.
+        - Poly Haven HDRIs (asset_type="hdris"): set as the world lighting.
+        - Poly Haven textures (asset_type="textures"): a PBR material, applied to the
+          objects named in ``apply_to``.
+        """
+        from blender_mcp.providers import downloads
+
         try:
             require_tool_group(ctx.settings, "assets")
-            providers = _providers()
-            provider = providers.get(source.lower())
-            if provider is None:
+            p = ctx.settings.providers()
+            src = source.lower().replace(" ", "")
+            if src == "polyhaven":
+                if not p.polyhaven:
+                    raise BlenderMCPError("Poly Haven provider is disabled")
+                got = await downloads.download_polyhaven(asset_id, asset_type, resolution)
+                got.setdefault("licence", "CC0")
+            elif src == "sketchfab":
+                if not (p.sketchfab and p.sketchfab_api_key):
+                    raise BlenderMCPError("Sketchfab needs enabling and an API key")
+                got = await downloads.download_sketchfab(asset_id, p.sketchfab_api_key)
+            elif src == "polypizza":
+                if not (p.polypizza and p.polypizza_api_key):
+                    raise BlenderMCPError("Poly Pizza needs enabling and an API key")
+                got = await downloads.download_polypizza(asset_id, p.polypizza_api_key)
+            else:
                 raise BlenderMCPError(f"Unknown asset source: {source}")
-            download = await provider.download(
-                asset_id, asset_type=asset_type, resolution=resolution
-            )
-            # Blender-side import for Poly Haven / others uses execute when path known.
-            # Return download info so the AI or a follow-up import_asset call can proceed.
-            return ok(
-                {
-                    "download": download,
-                    "next_step": (
-                        "Use import_asset with a downloaded local path, or ask Blender to fetch "
-                        "via execute_blender_code when trusted mode is enabled."
-                    ),
-                }
-            )
         except Exception as exc:  # noqa: BLE001
             return fail_from_exception(exc)
+
+        params = {
+            **got,
+            "source": src,
+            "asset_id": asset_id,
+            "target_size": target_size,
+            "apply_to": apply_to or [],
+            "ground": ground,
+            "collection": collection,
+        }
+        return await call_blender(ctx, "import_local_asset", params, group="assets")
 
     @mcp.tool(name="list_asset_providers")
     async def list_asset_providers() -> dict[str, Any]:

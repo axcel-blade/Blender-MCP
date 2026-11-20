@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import json
 import shutil
 import sys
@@ -93,7 +94,7 @@ def cmd_install_addon(args: argparse.Namespace) -> int:
         shutil.copytree(source, dest)
         print(f"Installed addon to {dest}")
 
-    print("Enable the addon in Blender: Edit → Preferences → Add-ons → Blender MCP")
+    print("Enable the addon in Blender: Edit > Preferences > Add-ons > Blender MCP")
     return 0
 
 
@@ -135,9 +136,25 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _make_console_output_safe() -> None:
+    """Prevent UnicodeEncodeError on legacy Windows consoles (cp1252 etc.).
+
+    Not applied to the stdio MCP server: there stdout carries the protocol and the
+    MCP library manages its own encoding.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        with contextlib.suppress(ValueError, OSError):
+            reconfigure(errors="replace")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if getattr(args, "command", None) not in (None, "run"):
+        _make_console_output_safe()
     if not getattr(args, "command", None):
         # Default to MCP stdio server for MCP client configs that call the console script.
         raise SystemExit(cmd_run(argparse.Namespace()))

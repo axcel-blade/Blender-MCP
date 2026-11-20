@@ -60,7 +60,7 @@ uv run blender-mcp install-addon
 ```json
 {
   "mcpServers": {
-    "blender": {
+    "blender-mcp": {
       "command": "uv",
       "args": ["run", "--directory", "C:/path/to/Blender-MCP", "blender-mcp"]
     }
@@ -109,7 +109,7 @@ Details: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - Bridge binds to `127.0.0.1` unless remote mode is explicitly enabled
 - Optional shared auth token
-- `execute_blender_code` is **not a sandbox** — keep `script_permission=restricted` unless you trust the client
+- `execute_blender_code` is **not a sandbox** — the default is `script_permission=trusted` (same as "MCP for Blender"); set it to `restricted` or `confirmation` if you do not trust the client
 - Path allow-lists for file operations when configured
 
 Report vulnerabilities privately via [SECURITY.md](SECURITY.md).

@@ -15,6 +15,7 @@ def diagnose_blender_connection(params: dict[str, Any]) -> dict[str, Any]:
     from .. import bridge_server
 
     from ..utils.prefs import get_preferences
+    from . import _REGISTRY
 
     prefs = get_preferences()
 
@@ -23,7 +24,7 @@ def diagnose_blender_connection(params: dict[str, Any]) -> dict[str, Any]:
         "blender_version": bpy.app.version_string,
         "addon_version": ADDON_VERSION,
         "bridge": state,
-        "script_permission": getattr(prefs, "script_permission", "restricted") if prefs else "restricted",
+        "script_permission": getattr(prefs, "script_permission", "trusted") if prefs else "trusted",
         "safe_execution_mode": getattr(prefs, "safe_execution_mode", True) if prefs else True,
         "capabilities": {
             "screenshots": True,
@@ -32,4 +33,5 @@ def diagnose_blender_connection(params: dict[str, Any]) -> dict[str, Any]:
             "polyhaven": getattr(prefs, "use_polyhaven", True) if prefs else True,
         },
         "api_available": True,
+        "commands": sorted(_REGISTRY),
     }
