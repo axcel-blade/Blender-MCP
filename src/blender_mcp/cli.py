@@ -93,7 +93,7 @@ def cmd_install_addon(args: argparse.Namespace) -> int:
         shutil.copytree(source, dest)
         print(f"Installed addon to {dest}")
 
-    print("Enable the addon in Blender: Edit → Preferences → Add-ons → Blender MCP")
+    print("Enable the addon in Blender: Edit > Preferences > Add-ons > Blender MCP")
     return 0
 
 
