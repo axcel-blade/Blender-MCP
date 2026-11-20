@@ -4,6 +4,7 @@ from blender_mcp.server import create_server
 
 def test_create_server_registers_tools():
     settings = load_settings()
+    settings.tool_profile = "full"
     mcp = create_server(settings)
     # FastMCP keeps tools in _tool_manager
     tools = getattr(mcp, "_tool_manager", None)

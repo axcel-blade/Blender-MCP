@@ -151,6 +151,17 @@ class Settings(BaseSettings):
     hunyuan_secret_key: str = Field(default="", alias="HUNYUAN_SECRET_KEY")
 
     tool_groups: ToolGroupsConfig = Field(default_factory=ToolGroupsConfig)
+    # "core": a small, high-leverage tool set (default; best for LLM accuracy).
+    # "full": every specialised tool (~170) for clients that want narrow wrappers.
+    tool_profile: str = Field(default="core", alias="TOOL_PROFILE")
+
+    @field_validator("tool_profile", mode="before")
+    @classmethod
+    def _check_profile(cls, value: Any) -> str:
+        value = (value or "core").strip().lower()
+        if value not in ("core", "full"):
+            raise ValueError("tool_profile must be 'core' or 'full'")
+        return value
 
     @field_validator("allowed_directories", mode="before")
     @classmethod
@@ -241,6 +252,7 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         logging_cfg = raw.get("logging", {})
         providers = raw.get("providers", {})
         tool_groups = raw.get("tool_groups", {})
+        tools_cfg = raw.get("tools", {})
 
         overrides.update(
             {
@@ -280,5 +292,8 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
                 else ToolGroupsConfig(),
             }
         )
+
+        if "profile" in tools_cfg:
+            overrides["tool_profile"] = tools_cfg["profile"]
 
     return Settings(**overrides)

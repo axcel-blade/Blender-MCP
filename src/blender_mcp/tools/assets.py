@@ -27,12 +27,14 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
 
     @mcp.tool(name="search_assets")
     async def search_assets(
-        source: str,
         query: str,
+        source: str = "polyhaven",
         asset_type: str | None = None,
         limit: int = 10,
     ) -> dict[str, Any]:
-        """Search external asset providers (polyhaven, sketchfab, polypizza)."""
+        """Search an asset library. source: polyhaven (free HDRIs, textures, models;
+        default), sketchfab or polypizza (need API keys; see get_addon_status).
+        asset_type for polyhaven: hdris, textures or models."""
         try:
             require_tool_group(ctx.settings, "assets")
             providers = _providers()

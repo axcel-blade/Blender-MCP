@@ -19,6 +19,35 @@ class AppContext:
         self.bridge = bridge
 
 
+# The "core" profile: a handful of high-leverage tools. execute_blender_code covers the
+# full bpy API, so narrow wrappers mostly add tool-selection noise and context cost.
+CORE_TOOLS = frozenset(
+    {
+        "get_addon_status",
+        "get_guide",
+        "get_scene_info",
+        "get_object_info",
+        "search_scene",
+        "execute_blender_code",
+        "look",
+        "search_assets",
+        "import_external_asset",
+        "generate_3d",
+        "get_generation_status",
+        "blender_mcp_version",
+    }
+)
+
+
+def apply_tool_profile(mcp: FastMCP, profile: str) -> None:
+    """Drop every non-core tool when running the core profile."""
+    if profile != "core":
+        return
+    for tool in list(mcp._tool_manager.list_tools()):  # noqa: SLF001
+        if tool.name not in CORE_TOOLS:
+            mcp.remove_tool(tool.name)
+
+
 def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
     from blender_mcp.tools import (
         animation,

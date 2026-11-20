@@ -16,6 +16,7 @@ def capture_viewport(params: dict[str, Any]):
         max_size=params.get("max_size"),
         shading=params.get("shading"),
         view=params.get("view"),
+        frame=params.get("frame"),
     )
 
 
