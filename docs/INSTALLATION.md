@@ -26,6 +26,21 @@ curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh | sh
 
 This clones into `~/Blender-MCP` (override with `BLENDER_MCP_HOME`), checks out `develop` (override with `BLENDER_MCP_BRANCH`), runs `uv sync`, and installs the addon.
 
+The installers (Windows, macOS and Linux, one-line or local clone) also register `blender-mcp` with the real install path in every AI client they find:
+
+| Client | Windows | macOS / Linux |
+| --- | --- | --- |
+| Claude Desktop | `%APPDATA%\Claude\claude_desktop_config.json` | `~/Library/Application Support/Claude/…` / `~/.config/Claude/…` |
+| Claude Code | `claude mcp add --scope user` | same |
+| Cursor | `%USERPROFILE%\.cursor\mcp.json` | `~/.cursor/mcp.json` |
+| Windsurf | `%USERPROFILE%\.codeium\windsurf\mcp_config.json` | `~/.codeium/windsurf/mcp_config.json` |
+| VS Code / Insiders (Copilot) | `%APPDATA%\Code\User\mcp.json` (`servers` key) | `Code/User/mcp.json` under Application Support / `~/.config` |
+| Cline, Roo Code | their VS Code extension settings files | same |
+| Gemini CLI | `%USERPROFILE%\.gemini\settings.json` | `~/.gemini/settings.json` |
+| Codex | `codex mcp add`, else `%USERPROFILE%\.codex\config.toml` | `codex mcp add`, else `~/.codex/config.toml` |
+
+A client is configured only if its folder or CLI exists; missing config files are created, and existing ones are backed up to `*.blender-mcp.bak` first. Files containing comments (JSONC) are skipped with a warning, so add the entry by hand there. Rerunning the installer is safe.
+
 ## Local clone install
 
 ### Windows

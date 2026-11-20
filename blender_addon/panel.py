@@ -1,4 +1,4 @@
-"""N-panel UI: AI / MCP."""
+"""N-panel UI: Blender MCP."""
 
 from __future__ import annotations
 
@@ -9,11 +9,11 @@ from . import bridge_server
 
 
 class VIEW3D_PT_blender_mcp(Panel):
-    bl_label = "AI / MCP"
+    bl_label = "Blender MCP"
     bl_idname = "VIEW3D_PT_blender_mcp"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "AI / MCP"
+    bl_category = "Blender MCP"
 
     def draw(self, context):
         layout = self.layout
