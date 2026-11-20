@@ -96,10 +96,19 @@ function Register-McpClients([string]$RepoRoot) {
         } else { Write-Warning "Codex: 'codex mcp add' failed. Add blender-mcp manually." }
     } else {
         $toml = Join-Path $env:USERPROFILE ".codex\config.toml"
-        if ((Test-Path (Split-Path $toml)) -and -not ((Test-Path $toml) -and (Select-String -Path $toml -Pattern '^\[mcp_servers\.blender-mcp\]' -Quiet))) {
+        if (Test-Path (Split-Path $toml)) {
             $p = $RepoRoot -replace '\\', '/'
-            $block = "`n[mcp_servers.blender-mcp]`ncommand = `"uv`"`nargs = [`"run`", `"--directory`", `"$p`", `"blender-mcp`"]`n"
-            [System.IO.File]::AppendAllText($toml, $block, (New-Object System.Text.UTF8Encoding $false))
+            $text = ""
+            if (Test-Path $toml) {
+                $text = [System.IO.File]::ReadAllText($toml)
+                Copy-Item $toml "$toml.blender-mcp.bak" -Force
+            }
+            # Drop any existing blender-mcp table (and sub-tables) so a reinstall updates the path.
+            $text = [regex]::Replace($text, '(?ms)^\[mcp_servers\.blender-mcp(?:\.[^\]]*)?\][^\r\n]*\r?\n.*?(?=^\[(?!mcp_servers\.blender-mcp[\].])|\z)', '')
+            $text = $text.TrimEnd()
+            if ($text) { $text += "`n`n" }
+            $text += "[mcp_servers.blender-mcp]`ncommand = `"uv`"`nargs = [`"run`", `"--directory`", `"$p`", `"blender-mcp`"]`n"
+            [System.IO.File]::WriteAllText($toml, $text, (New-Object System.Text.UTF8Encoding $false))
             Write-Host "Configured $toml"
         }
     }
