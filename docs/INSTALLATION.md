@@ -24,7 +24,7 @@ irm https://axcel-blade.github.io/Blender-MCP/install.ps1 | iex
 curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh | sh
 ```
 
-This clones into `~/Blender-MCP` (override with `BLENDER_MCP_HOME`), checks out `develop` (override with `BLENDER_MCP_BRANCH`), runs `uv sync`, and installs the addon.
+This clones into `~/Blender-MCP` (override with `BLENDER_MCP_HOME`), checks out `main` (override with `BLENDER_MCP_BRANCH`), runs `uv sync`, and installs the addon.
 
 The installers (Windows, macOS and Linux, one-line or local clone) also register `blender-mcp` with the real install path in every AI client they find:
 
