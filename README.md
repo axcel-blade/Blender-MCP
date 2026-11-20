@@ -55,7 +55,22 @@ uv run blender-mcp install-addon
 
 1. Blender → **Edit → Preferences → Add-ons** → enable **Blender MCP**
 2. 3D Viewport → press **N** → **Blender MCP** → **Start**
-3. Point your MCP client at:
+3. Fully quit and reopen your AI client.
+
+### Automatic client config
+
+The one-line and local-clone installers register `blender-mcp`, with the real install path, in every AI client they find. You don't need to edit any config by hand:
+
+- Claude Desktop, Claude Code
+- Cursor, Windsurf
+- VS Code / VS Code Insiders (Copilot), Cline, Roo Code
+- Gemini CLI, Codex
+
+A client is set up only if it's installed. Existing configs are backed up to `*.blender-mcp.bak` and your other servers are kept. Re-running the installer is safe. Paths per OS are in [docs/INSTALLATION.md](docs/INSTALLATION.md).
+
+### Manual client config
+
+For any other client, or if you ran only `uv sync` + `install-addon`, point it at your clone:
 
 ```json
 {
