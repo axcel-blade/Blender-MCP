@@ -28,7 +28,13 @@ class BLENDERMCP_AddonPreferences(AddonPreferences):
         description="Bind beyond localhost. No encryption — trusted networks only.",
     )
 
-    safe_execution_mode: BoolProperty(name="Safe execution mode", default=True)
+    safe_execution_mode: BoolProperty(
+        name="Safe execution mode",
+        default=True,
+        description="Refuse AI scripts that run programs, delete files, use the network, "
+        "change preferences or add-ons, register handlers, or quit Blender. "
+        "A safety net, not a sandbox",
+    )
     script_permission: EnumProperty(
         name="Script permission",
         items=(
@@ -39,6 +45,12 @@ class BLENDERMCP_AddonPreferences(AddonPreferences):
         default="trusted",
     )
     execution_timeout: FloatProperty(name="Execution timeout", default=60.0, min=1.0)
+    track_user_edits: BoolProperty(
+        name="Report manual edits",
+        default=True,
+        description="Tell the AI what you changed by hand since its last command, "
+        "so it doesn't overwrite your work",
+    )
     allowed_directories: StringProperty(
         name="Allowed directories",
         default="",
@@ -85,6 +97,7 @@ class BLENDERMCP_AddonPreferences(AddonPreferences):
         col.prop(self, "safe_execution_mode")
         col.prop(self, "script_permission")
         col.prop(self, "execution_timeout")
+        col.prop(self, "track_user_edits")
         col.prop(self, "allowed_directories")
         col.separator()
         col.label(text="Tool groups")

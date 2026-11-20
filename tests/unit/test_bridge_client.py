@@ -18,7 +18,7 @@ async def test_connect_failure():
 
 @pytest.mark.asyncio
 async def test_send_command_timeout():
-    client = BlenderBridgeClient(BridgeConfig(request_timeout=0.05))
+    client = BlenderBridgeClient(BridgeConfig(request_timeout=0.05, response_grace=0))
     client._connected = True
     client._writer = MagicMock()
     client._writer.write = MagicMock()

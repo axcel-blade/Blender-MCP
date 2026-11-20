@@ -11,6 +11,7 @@ _REGISTRY: dict[str, Handler] = {}
 
 _HANDLER_MODULES = (
     "animation",
+    "api_docs",
     "assets",
     "cameras",
     "collections",

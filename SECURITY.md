@@ -32,6 +32,12 @@ We aim to acknowledge reports within **7 days** and provide a status update with
 - The Blender bridge defaults to **localhost only**
 - Keep `script_permission=restricted` unless you fully trust the MCP client
 - `execute_blender_code` is powerful and is **not a secure sandbox**
+- With **Safe execution mode** on (the addon default), scripts are checked before they
+  run and refused if they start programs, delete files, use the network, register
+  classes/handlers/timers, enable add-ons, change or save preferences, quit or reset
+  Blender, or use `eval`/`exec`/`__import__`/`importlib`/escape-hatch dunders. This
+  stops accidents and obvious misuse; Python is too dynamic for inspection to be
+  airtight, so don't treat it as isolation.
 - Never commit API keys or auth tokens
 - Do not expose the bridge to the public internet
 

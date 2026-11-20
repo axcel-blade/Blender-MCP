@@ -23,6 +23,10 @@ execute_blender_code returns the `result` variable if you set one, else the valu
 last expression, plus stdout and a traceback on error. Return dicts/lists, not prints.
 Batch related work into one script; read the traceback and retry instead of guessing.
 
+Unsure of a property, enum value, operator argument or node socket? lookup_api reads it
+from the user's own Blender (e.g. "RenderSettings.engine", "ShaderNodeBsdfPrincipled",
+"bpy.ops.mesh.bevel", or search words), so it always matches their version.
+
 Scripts run in someone else's Blender, so:
 - Find shader nodes by type, never by name (names are localized):
   `next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")`.
@@ -38,6 +42,10 @@ Scripts run in someone else's Blender, so:
 - In Edit Mode use bmesh and bmesh.update_edit_mesh(); new bpy.data objects must be
   linked to a collection to appear.
 - Blender is Z-up, meters by default.
+
+A reply with `user_edits` means the user changed the scene by hand since your last call
+(objects added, removed, moved or edited; selection, mode or frame). Treat that as their
+intent: build on it, and don't undo or overwrite it unless they ask.
 
 Work like an artist: inspect first, put new work in its own named collection, never delete
 or overwrite the user's objects unless asked, then look (mode=material or rendered for

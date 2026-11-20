@@ -29,6 +29,7 @@ CORE_TOOLS = frozenset(
         "get_object_info",
         "search_scene",
         "execute_blender_code",
+        "lookup_api",
         "look",
         "search_assets",
         "import_external_asset",
