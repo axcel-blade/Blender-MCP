@@ -38,12 +38,19 @@ function Ensure-Repo {
     if (Test-Path (Join-Path $InstallDir ".git")) {
         Write-Host "Updating existing clone..."
         Set-Location $InstallDir
+        $dirty = git status --porcelain --untracked-files=no
+        if ($dirty) {
+            $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+            Write-Host "Local changes found; stashing them as blender-mcp-installer-$stamp (restore with: git -C `"$InstallDir`" stash pop)" -ForegroundColor Yellow
+            git stash push -m "blender-mcp-installer-$stamp"
+            Assert-Exit "git stash"
+        }
         git fetch origin
         Assert-Exit "git fetch"
         git checkout $Branch
-        Assert-Exit "git checkout $Branch" "Local changes in $InstallDir block the update. Commit or stash them (git -C `"$InstallDir`" stash), then re-run."
+        Assert-Exit "git checkout $Branch"
         git pull --ff-only origin $Branch
-        Assert-Exit "git pull" "Local changes in $InstallDir block the update. Commit or stash them (git -C `"$InstallDir`" stash), then re-run."
+        Assert-Exit "git pull"
         return
     }
     if (Test-Path $InstallDir) {

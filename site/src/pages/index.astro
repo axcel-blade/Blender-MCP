@@ -67,12 +67,54 @@ const unixCmd = `curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh
 </Layout>
 
 <script>
+  // navigator.clipboard only exists in secure contexts (HTTPS / localhost),
+  // so fall back to execCommand when the site is served over plain HTTP.
+  async function copyText(value: string): Promise<boolean> {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch {
+        // fall through to the legacy path
+      }
+    }
+    const area = document.createElement("textarea");
+    area.value = value;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.top = "0";
+    area.style.left = "0";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    document.body.removeChild(area);
+    return ok;
+  }
+
+  function selectCommand(button: HTMLButtonElement) {
+    const code = button.parentElement?.querySelector("code");
+    if (!code) return;
+    const range = document.createRange();
+    range.selectNodeContents(code);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }
+
   document.querySelectorAll<HTMLButtonElement>("button.copy").forEach((button) => {
     button.addEventListener("click", async () => {
       const value = button.dataset.copy ?? "";
-      await navigator.clipboard.writeText(value);
-      button.dataset.copied = "true";
-      button.textContent = "Copied";
+      const ok = await copyText(value);
+      button.dataset.copied = ok ? "true" : "false";
+      button.textContent = ok ? "Copied" : "Press Ctrl+C";
+      if (!ok) selectCommand(button);
       window.setTimeout(() => {
         button.dataset.copied = "false";
         button.textContent = "Copy";
