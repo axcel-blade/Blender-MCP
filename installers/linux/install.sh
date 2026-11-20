@@ -6,7 +6,10 @@ echo "Blender MCP installer (Linux)"
 BRANCH="${BLENDER_MCP_BRANCH:-main}"
 if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
   echo "Checking out $BRANCH..."
-  git -C "$ROOT" fetch origin "$BRANCH" || echo "warning: could not fetch $BRANCH" >&2
+  if ! git -C "$ROOT" config --get-all remote.origin.fetch | grep -qE "refs/heads/(\*|$BRANCH):"; then
+    git -C "$ROOT" remote set-branches --add origin "$BRANCH"
+  fi
+  git -C "$ROOT" fetch origin || echo "warning: could not fetch $BRANCH" >&2
   git -C "$ROOT" checkout "$BRANCH"
   git -C "$ROOT" pull --ff-only origin "$BRANCH" || echo "warning: could not fast-forward $BRANCH" >&2
 fi

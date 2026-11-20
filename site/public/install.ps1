@@ -45,6 +45,12 @@ function Ensure-Repo {
             git stash push -m "blender-mcp-installer-$stamp"
             Assert-Exit "git stash"
         }
+        # Older installs were cloned --single-branch; make sure origin tracks $Branch.
+        $fetchSpecs = git config --get-all remote.origin.fetch
+        if (-not ($fetchSpecs | Where-Object { $_ -match "refs/heads/(\*|$([regex]::Escape($Branch))):" })) {
+            git remote set-branches --add origin $Branch
+            Assert-Exit "git remote set-branches"
+        }
         git fetch origin
         Assert-Exit "git fetch"
         git checkout $Branch

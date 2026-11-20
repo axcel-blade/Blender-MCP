@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Re-running the installer on an install cloned before 1.2.3 no longer fails at `git checkout main`: those clones were `--single-branch` on `develop`, so the installer now adds the target branch to `origin` before fetching.
+
 ## [1.2.3] - 2026-11-20
 
 ### Changed

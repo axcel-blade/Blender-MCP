@@ -34,6 +34,10 @@ if [ -d "$INSTALL_DIR/.git" ]; then
     echo "Local changes found; stashing them as blender-mcp-installer-$STAMP (restore with: git -C \"$INSTALL_DIR\" stash pop)"
     git stash push -m "blender-mcp-installer-$STAMP"
   fi
+  # Older installs were cloned --single-branch; make sure origin tracks $BRANCH.
+  if ! git config --get-all remote.origin.fetch | grep -qE "refs/heads/(\*|$BRANCH):"; then
+    git remote set-branches --add origin "$BRANCH"
+  fi
   git fetch origin
   git checkout "$BRANCH"
   git pull --ff-only origin "$BRANCH"
