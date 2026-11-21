@@ -193,7 +193,9 @@ def get_material_info(params: dict[str, Any]):
 def list_materials(params: dict[str, Any]):
     import bpy
 
-    return [{"name": m.name, "users": m.users, "use_nodes": m.use_nodes} for m in bpy.data.materials]
+    return [
+        {"name": m.name, "users": m.users, "use_nodes": m.use_nodes} for m in bpy.data.materials
+    ]
 
 
 @command("set_material_nodes")
@@ -229,8 +231,9 @@ def set_material_nodes(params: dict[str, Any]):
 
 @command("assign_texture")
 def assign_texture(params: dict[str, Any]):
-    import bpy
     from pathlib import Path
+
+    import bpy
 
     mat = bpy.data.materials.get(params["material_name"])
     if mat is None:

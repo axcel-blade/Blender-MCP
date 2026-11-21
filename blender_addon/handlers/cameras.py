@@ -51,7 +51,6 @@ def set_active_camera(params: dict[str, Any]):
 
 @command("focus_camera_on_object")
 def focus_camera_on_object(params: dict[str, Any]):
-    import mathutils
 
     cam = get_object(params["camera"])
     target = get_object(params["object_name"])
