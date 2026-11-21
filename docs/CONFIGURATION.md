@@ -11,6 +11,8 @@ Important keys:
 | `bridge.auth_token` | empty | Shared secret if set in addon prefs |
 | `security.script_permission` | `trusted` | `restricted` / `confirmation` / `trusted` |
 | `security.allowed_directories` | `[]` | Path allow-list |
+| `blender.path` | empty (auto-detect) | Blender executable used by `open_blender`. Env: `BLENDER_MCP_BLENDER_PATH` |
+| `blender.launch_timeout` | `60` | Seconds `open_blender` waits for the addon bridge. Env: `BLENDER_MCP_BLENDER_LAUNCH_TIMEOUT` |
 | `tool_groups.*` | enabled | Disable capability groups |
 | `providers.*` | mixed | External asset providers |
 

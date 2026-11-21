@@ -36,6 +36,9 @@ CORE_TOOLS = frozenset(
         "generate_3d",
         "get_generation_status",
         "blender_mcp_version",
+        "open_blender",
+        "close_blender",
+        "blend_file",
     }
 )
 
@@ -52,9 +55,11 @@ def apply_tool_profile(mcp: FastMCP, profile: str) -> None:
 def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
     from blender_mcp.tools import (
         animation,
+        app,
         assets,
         cameras,
         collections,
+        files,
         generation,
         geometry_nodes,
         import_export,
@@ -88,6 +93,8 @@ def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
         screenshots,
         scripting,
         status,
+        app,
+        files,
     ]
     for module in modules:
         module.register(mcp, ctx)

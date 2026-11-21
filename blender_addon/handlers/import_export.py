@@ -115,6 +115,8 @@ def save_blend_file(params: dict[str, Any]):
 def open_blend_file(params: dict[str, Any]):
     import bpy
 
+    if params.get("check_unsaved"):
+        _guard_unsaved(params)
     path = Path(params["path"]).expanduser()
     if not path.exists():
         raise ValueError(f"File not found: {path}")
@@ -127,3 +129,118 @@ def get_project_path(params: dict[str, Any]):
     import bpy
 
     return {"path": bpy.data.filepath or None, "unsaved": not bool(bpy.data.filepath)}
+
+
+def _blend_path(raw: str) -> Path:
+    path = Path(raw).expanduser()
+    if path.suffix.lower() != ".blend":
+        path = path.with_name(path.name + ".blend")
+    return path
+
+
+def _guard_unsaved(params: dict[str, Any]) -> None:
+    from ..unsaved import has_unsaved_changes
+
+    if has_unsaved_changes() and not params.get("discard_changes", False):
+        raise ValueError(
+            "The open file has unsaved changes; save first or pass discard_changes=true"
+        )
+
+
+@command("blend_file_info")
+def blend_file_info(params: dict[str, Any]):
+    import bpy
+
+    from ..unsaved import has_unsaved_changes
+
+    path = bpy.data.filepath
+    return {
+        "path": path or None,
+        "name": Path(path).name if path else None,
+        "saved_once": bool(path),
+        "unsaved_changes": has_unsaved_changes(),
+    }
+
+
+@command("save_copy")
+def save_copy(params: dict[str, Any]):
+    import bpy
+
+    path = _blend_path(params["path"])
+    if path.exists() and not params.get("overwrite", False):
+        raise PermissionError(f"{path} exists; pass overwrite=true to replace it")
+    from ..unsaved import has_unsaved_changes, mark
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    changed = has_unsaved_changes()
+    bpy.ops.wm.save_as_mainfile(filepath=str(path), copy=True)
+    mark(changed)  # a copy does not save the open file
+    return {"copy": str(path), "current": bpy.data.filepath}
+
+
+@command("rename_blend_file")
+def rename_blend_file(params: dict[str, Any]):
+    """Rename the open .blend on disk; ``new_name`` is a name or a full path."""
+    import bpy
+
+    old = bpy.data.filepath
+    if not old:
+        raise ValueError("The file has never been saved; use save_as instead")
+    old_path = Path(old)
+    raw = params["new_name"]
+    new_path = _blend_path(raw if ("/" in raw or "\\" in raw) else str(old_path.parent / raw))
+    if new_path.resolve() == old_path.resolve():
+        return {"path": old, "renamed": False}
+    if new_path.exists():
+        raise PermissionError(f"{new_path} already exists")
+    new_path.parent.mkdir(parents=True, exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=str(new_path))
+    removed = []
+    for stale in (old_path, old_path.with_name(old_path.name + "1")):  # .blend and .blend1
+        if stale.exists():
+            stale.unlink()
+            removed.append(str(stale))
+    return {"old_path": old, "path": bpy.data.filepath, "renamed": True, "removed": removed}
+
+
+@command("new_blend_file")
+def new_blend_file(params: dict[str, Any]):
+    import bpy
+
+    _guard_unsaved(params)
+    bpy.ops.wm.read_homefile(use_empty=bool(params.get("empty", False)))
+    return {"path": None, "new": True}
+
+
+@command("revert_blend_file")
+def revert_blend_file(params: dict[str, Any]):
+    import bpy
+
+    if not bpy.data.filepath:
+        raise ValueError("The file has never been saved; nothing to revert to")
+    bpy.ops.wm.revert_mainfile()
+    return {"path": bpy.data.filepath, "reverted": True}
+
+
+@command("list_blend_files")
+def list_blend_files(params: dict[str, Any]):
+    import bpy
+
+    directory = params.get("directory") or (
+        str(Path(bpy.data.filepath).parent) if bpy.data.filepath else ""
+    )
+    if not directory:
+        raise ValueError("No directory given and the open file has never been saved")
+    root = Path(directory).expanduser()
+    if not root.is_dir():
+        raise ValueError(f"Not a directory: {root}")
+    files = sorted(root.glob("**/*.blend" if params.get("recursive") else "*.blend"))
+    limit = int(params.get("limit", 100))
+    return {
+        "directory": str(root),
+        "files": [
+            {"path": str(p), "size_bytes": p.stat().st_size, "modified": p.stat().st_mtime}
+            for p in files[:limit]
+        ],
+        "truncated": len(files) > limit,
+    }

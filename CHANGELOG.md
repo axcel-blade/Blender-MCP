@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `open_blender` (core tool): launches Blender when the addon bridge is not answering, optionally opening a `.blend` file, and waits until the bridge accepts connections. It looks for Blender in `BLENDER_MCP_BLENDER_PATH`, then `PATH`, then the usual install folders (Program Files, Microsoft Store and Steam on Windows, `/Applications` on macOS, `/usr/bin` and `/snap/bin` on Linux).
+- `close_blender` (core tool): quits Blender. It refuses when the file has unsaved changes unless `save=True` or `discard_changes=True`. If the addon is not answering, it can only terminate a Blender that the server itself started.
+- `blend_file` (core tool): one tool for the open `.blend` file, with actions `info`, `save`, `save_as`, `save_copy`, `rename`, `open`, `new`, `revert` and `list`. `rename` renames the file on disk and removes the old `.blend` and `.blend1`. `open` and `new` refuse to drop unsaved changes unless `discard_changes=True`. Paths follow `security.allowed_directories`.
+- New addon commands: `quit_blender`, `blend_file_info`, `save_copy`, `rename_blend_file`, `new_blend_file`, `revert_blend_file`, `list_blend_files`.
+- Settings `[blender] path` and `launch_timeout` in `config.toml` (env: `BLENDER_MCP_BLENDER_PATH`, `BLENDER_MCP_BLENDER_LAUNCH_TIMEOUT`; timeout default 60 seconds).
+
+### Changed
+
+- The core profile now has 16 tools.
+
+### Fixed
+
+- Unsaved-change checks now see edits made through the bridge. Blender's `bpy.data.is_dirty` ignores changes made from scripts, so the addon now also tracks scene changes itself.
+
+Reinstall the addon (`blender-mcp install-addon`) to use `close_blender` and `blend_file`.
+
 ## [1.4.0] - 2026-11-20
 
 ### Added

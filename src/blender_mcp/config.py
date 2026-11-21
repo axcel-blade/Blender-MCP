@@ -137,6 +137,10 @@ class Settings(BaseSettings):
     render_max_time_seconds: int = 300
     render_default_engine: str = "CYCLES"
 
+    # Path to the Blender executable for open_blender; empty means auto-detect.
+    blender_path: str = Field(default="", alias="BLENDER_PATH")
+    blender_launch_timeout: float = Field(default=60.0, alias="BLENDER_LAUNCH_TIMEOUT")
+
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     log_file: str = ""
 
@@ -303,5 +307,11 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
 
         if "profile" in tools_cfg:
             overrides["tool_profile"] = tools_cfg["profile"]
+
+        blender_cfg = raw.get("blender", {})
+        if "path" in blender_cfg:
+            overrides["blender_path"] = blender_cfg["path"]
+        if "launch_timeout" in blender_cfg:
+            overrides["blender_launch_timeout"] = blender_cfg["launch_timeout"]
 
     return Settings(**overrides)

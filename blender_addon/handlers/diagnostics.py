@@ -35,3 +35,27 @@ def diagnose_blender_connection(params: dict[str, Any]) -> dict[str, Any]:
         "api_available": True,
         "commands": sorted(_REGISTRY),
     }
+
+
+@command("quit_blender")
+def quit_blender(params: dict[str, Any]) -> dict[str, Any]:
+    """Quit Blender shortly after replying, optionally saving the open file first."""
+    import bpy
+
+    save = bool(params.get("save", False))
+    filepath = bpy.data.filepath
+    if save and not filepath:
+        raise ValueError("The file has never been saved; pass save=False or save it first")
+    from ..unsaved import has_unsaved_changes
+
+    if not save and has_unsaved_changes() and not params.get("discard_changes", False):
+        raise ValueError("The file has unsaved changes; pass save=True or discard_changes=True")
+
+    def _quit() -> None:
+        if save:
+            bpy.ops.wm.save_mainfile()
+        bpy.ops.wm.quit_blender()
+
+    # Defer so the bridge can send this reply before Blender exits.
+    bpy.app.timers.register(_quit, first_interval=0.5)
+    return {"quitting": True, "saved": save, "filepath": filepath}
