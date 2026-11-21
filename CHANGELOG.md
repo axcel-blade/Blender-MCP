@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-21
+
 ### Added
 
 - `open_blender` (core tool): launches Blender when the addon bridge is not answering, optionally opening a `.blend` file, and waits until the bridge accepts connections. It looks for Blender in `BLENDER_MCP_BLENDER_PATH`, then `PATH`, then the usual install folders (Program Files, Microsoft Store and Steam on Windows, `/Applications` on macOS, `/usr/bin` and `/snap/bin` on Linux).
