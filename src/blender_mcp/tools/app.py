@@ -75,7 +75,9 @@ def _version_from_executable(exe: str) -> str | None:
 
 def blender_version(exe: str) -> str | None:
     """Version from the install folder name (``Blender 5.3``), else from the executable."""
-    for part in reversed(Path(exe).parts[:-1]):
+    # Split on both separators: Path only knows the current OS's, so a Windows path
+    # read on Linux (or the reverse) would otherwise be one long name.
+    for part in reversed(re.split(r"[\\/]", exe)[:-1]):
         if "blender" in part.lower():
             match = _VERSION_IN_PATH.search(part)
             if match:
@@ -207,22 +209,28 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
                 }
             args.append(file_path)
 
-        kwargs: dict[str, Any] = {
-            "stdin": subprocess.DEVNULL,
-            "stdout": subprocess.DEVNULL,
-            "stderr": subprocess.DEVNULL,
-        }
+        # Detach so Blender outlives this server and never writes to its stdio.
         if sys.platform == "win32":
-            kwargs["creationflags"] = (
-                subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+            proc: subprocess.Popen[bytes] = subprocess.Popen(  # noqa: S603
+                args,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
             )
         else:
-            kwargs["start_new_session"] = True
-        _launched = subprocess.Popen(args, **kwargs)  # noqa: S603
+            proc = subprocess.Popen(  # noqa: S603
+                args,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+        _launched = proc
 
         result = {
             "launched": True,
-            "pid": _launched.pid,
+            "pid": proc.pid,
             "executable": exe,
             "version": blender_version(exe),
         }
@@ -231,11 +239,11 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
 
         deadline = time.monotonic() + ctx.settings.blender_launch_timeout
         while time.monotonic() < deadline:
-            if _launched.poll() is not None:
+            if proc.poll() is not None:
                 return {
                     "success": False,
                     "error_code": "BLENDER_EXITED",
-                    "error": f"Blender exited during startup (code {_launched.returncode})",
+                    "error": f"Blender exited during startup (code {proc.returncode})",
                     "details": result,
                 }
             if await _bridge_up(ctx):
