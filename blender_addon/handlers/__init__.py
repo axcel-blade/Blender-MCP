@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import importlib
 import sys
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 Handler = Callable[[dict[str, Any]], Any]
 _REGISTRY: dict[str, Handler] = {}

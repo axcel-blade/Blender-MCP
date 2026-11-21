@@ -195,12 +195,20 @@ def rename_blend_file(params: dict[str, Any]):
         raise PermissionError(f"{new_path} already exists")
     new_path.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(new_path))
-    removed = []
-    for stale in (old_path, old_path.with_name(old_path.name + "1")):  # .blend and .blend1
-        if stale.exists():
-            stale.unlink()
-            removed.append(str(stale))
-    return {"old_path": old, "path": bpy.data.filepath, "renamed": True, "removed": removed}
+    result = {"old_path": old, "path": bpy.data.filepath, "renamed": True}
+    stale = [p for p in (old_path, old_path.with_name(old_path.name + "1")) if p.exists()]
+    if params.get("keep_old", False):
+        result["kept"] = [str(p) for p in stale]
+        return result
+
+    from ..utils.trash import move_to_trash
+
+    # Trash, never delete: the user can restore the old file if the rename was a mistake.
+    result["trashed"] = [str(p) for p in stale if move_to_trash(p)]
+    result["kept"] = [str(p) for p in stale if p.exists()]
+    if result["kept"]:
+        result["warning"] = "Could not move the old file to the trash; it was left in place"
+    return result
 
 
 @command("new_blend_file")
@@ -243,4 +251,90 @@ def list_blend_files(params: dict[str, Any]):
             for p in files[:limit]
         ],
         "truncated": len(files) > limit,
+    }
+
+
+def _file_entry(path: Path) -> dict[str, Any]:
+    stat = path.stat()
+    return {"path": str(path), "size_bytes": stat.st_size, "modified": stat.st_mtime}
+
+
+@command("recent_blend_files")
+def recent_blend_files(params: dict[str, Any]):
+    """Blender's File > Open Recent list, newest first."""
+    import bpy
+
+    config = bpy.utils.user_resource("CONFIG")
+    listing = Path(config) / "recent-files.txt"
+    limit = int(params.get("limit", 20))
+    files = []
+    if listing.is_file():
+        for line in listing.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            path = Path(line)
+            files.append(_file_entry(path) if path.is_file() else {"path": line, "missing": True})
+            if len(files) >= limit:
+                break
+    return {"files": files, "source": str(listing)}
+
+
+def _temp_dir() -> Path:
+    import bpy
+
+    prefs = bpy.context.preferences.filepaths
+    configured = getattr(prefs, "temporary_directory", "")
+    return Path(configured) if configured else Path(bpy.app.tempdir).parent
+
+
+@command("list_autosaves")
+def list_autosaves(params: dict[str, Any]):
+    """Autosaves and the last-session file (quit.blend), newest first."""
+    root = _temp_dir()
+    found = [p for p in root.glob("*.blend") if p.name == "quit.blend" or "autosave" in p.name]
+    found.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    entries = []
+    for p in found:
+        entry = _file_entry(p)
+        entry["kind"] = "last_session" if p.name == "quit.blend" else "autosave"
+        entries.append(entry)
+    return {"directory": str(root), "files": entries}
+
+
+@command("recover_blend_file")
+def recover_blend_file(params: dict[str, Any]):
+    """Open an autosave, or the last session (quit.blend) when no path is given.
+
+    Blender keeps the last session's original path, so a plain save writes over that
+    file. An autosave keeps its temp-folder path, so it should be saved with save_as.
+    """
+    import bpy
+
+    _guard_unsaved(params)
+    raw = params.get("path")
+    if not raw:
+        quit_file = _temp_dir() / "quit.blend"
+        if not quit_file.is_file():
+            raise ValueError(f"No last-session file found at {quit_file}")
+        bpy.ops.wm.recover_last_session()
+        path = bpy.data.filepath
+        return {
+            "recovered": str(quit_file),
+            "kind": "last_session",
+            "path": path or None,
+            "note": f"Saving now writes over {path}" if path else "Save it with save_as",
+        }
+    path = Path(raw).expanduser()
+    if not path.is_file():
+        raise ValueError(f"File not found: {path}")
+    if path.resolve().parent != _temp_dir().resolve():
+        raise PermissionError("Only autosaves from Blender's temporary folder can be recovered")
+    bpy.ops.wm.recover_auto_save(filepath=str(path))
+    return {
+        "recovered": str(path),
+        "kind": "autosave",
+        "path": bpy.data.filepath or None,
+        "note": "This file points at the autosave in the temporary folder; "
+        "save it with save_as to keep it",
     }

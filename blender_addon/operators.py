@@ -43,7 +43,8 @@ class BLENDERMCP_OT_test_connection(Operator):
         if probe.get("ok"):
             self.report(
                 {"INFO"},
-                f"Listening on {probe.get('host')}:{probe.get('port')} — clients={state.get('clients')}",
+                f"Listening on {probe.get('host')}:{probe.get('port')} — "
+                f"clients={state.get('clients')}",
             )
             return {"FINISHED"}
 

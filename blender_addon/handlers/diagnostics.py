@@ -11,9 +11,7 @@ from . import command
 def diagnose_blender_connection(params: dict[str, Any]) -> dict[str, Any]:
     import bpy
 
-    from .. import ADDON_VERSION
-    from .. import bridge_server
-
+    from .. import ADDON_VERSION, bridge_server
     from ..utils.prefs import get_preferences
     from . import _REGISTRY
 

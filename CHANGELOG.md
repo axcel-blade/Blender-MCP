@@ -11,17 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `open_blender` (core tool): launches Blender when the addon bridge is not answering, optionally opening a `.blend` file, and waits until the bridge accepts connections. It looks for Blender in `BLENDER_MCP_BLENDER_PATH`, then `PATH`, then the usual install folders (Program Files, Microsoft Store and Steam on Windows, `/Applications` on macOS, `/usr/bin` and `/snap/bin` on Linux).
 - `close_blender` (core tool): quits Blender. It refuses when the file has unsaved changes unless `save=True` or `discard_changes=True`. If the addon is not answering, it can only terminate a Blender that the server itself started.
-- `blend_file` (core tool): one tool for the open `.blend` file, with actions `info`, `save`, `save_as`, `save_copy`, `rename`, `open`, `new`, `revert` and `list`. `rename` renames the file on disk and removes the old `.blend` and `.blend1`. `open` and `new` refuse to drop unsaved changes unless `discard_changes=True`. Paths follow `security.allowed_directories`.
-- New addon commands: `quit_blender`, `blend_file_info`, `save_copy`, `rename_blend_file`, `new_blend_file`, `revert_blend_file`, `list_blend_files`.
+- `blend_file` (core tool): one tool for the open `.blend` file, with actions `info`, `save`, `save_as`, `save_copy`, `rename`, `open`, `new`, `revert` and `list`. `rename` renames the file on disk. `open` and `new` refuse to drop unsaved changes unless `discard_changes=True`. Paths follow `security.allowed_directories`.
+- `blend_file` actions `recent` (Blender's Open Recent list), `autosaves` (autosaves and the last session, `quit.blend`) and `recover` (open an autosave or the last session; the reply says where a plain save would write). `recover` only accepts files from Blender's temporary folder.
+- `open_blender(reopen_last=True)` reopens the file that was open when `close_blender` last quit Blender, so restarting Blender keeps your place. `close_blender` replies with that file.
+- New addon commands: `quit_blender`, `blend_file_info`, `save_copy`, `rename_blend_file`, `new_blend_file`, `revert_blend_file`, `list_blend_files`, `recent_blend_files`, `list_autosaves`, `recover_blend_file`.
 - Settings `[blender] path` and `launch_timeout` in `config.toml` (env: `BLENDER_MCP_BLENDER_PATH`, `BLENDER_MCP_BLENDER_LAUNCH_TIMEOUT`; timeout default 60 seconds).
 
 ### Changed
 
 - The core profile now has 16 tools.
+- CI now lints and format-checks `blender_addon/` and `scripts/` as well as `src/` and `tests/`. Existing lint errors there are fixed (layout only, apart from equivalent rewrites such as `contextlib.suppress` and `TimeoutError`).
+- `blend_file rename` moves the old `.blend` and `.blend1` to the system trash (Recycle Bin, macOS Trash, freedesktop Trash) instead of deleting them. If that fails, the old file is left in place and the reply says so. `keep_old=True` keeps it.
+- `open_blender` picks the newest installed version by default instead of the first one found, and takes `version` (e.g. `"5.3"`) to choose one. `list_installs_only=True` lists the installs without launching.
+- While a Blender launched by `open_blender` is still loading, `get_addon_status` reports `"blender": "starting"` and `open_blender` does not start a second one.
+- `get_addon_status` warns when the installed addon lacks the new file commands (`quit_blender`, `blend_file_info`, `rename_blend_file`, `save_copy`, `recent_blend_files`, `recover_blend_file`).
 
 ### Fixed
 
 - Unsaved-change checks now see edits made through the bridge. Blender's `bpy.data.is_dirty` ignores changes made from scripts, so the addon now also tracks scene changes itself.
+- Environment variables (and `.env`) now override `config.toml`, as the loader always claimed. Before, any `config.toml` replaced every environment setting, including ones the file did not mention: a file without a `[security]` section reset `script_permission` to `restricted` despite `BLENDER_MCP_SCRIPT_PERMISSION`.
+- Only `BLENDER_MCP_*` environment variables are read. Before, unprefixed names also worked (`PORT`, `HOST`, `LOG_LEVEL`, `AUTH_TOKEN`, `SAFE_EXECUTION`, the API keys and so on), so a `PORT` set by another tool could silently move the bridge to a different port. If you relied on an unprefixed name, add the `BLENDER_MCP_` prefix.
+- `blend_file rename` with a bare name now checks the final path (next to the open file) against `security.allowed_directories` before renaming.
 
 Reinstall the addon (`blender-mcp install-addon`) to use `close_blender` and `blend_file`.
 

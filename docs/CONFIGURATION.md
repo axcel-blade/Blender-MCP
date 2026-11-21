@@ -2,6 +2,14 @@
 
 Copy `config.example.toml` to `config.toml` or set environment variables with the `BLENDER_MCP_` prefix (see `.env.example`).
 
+When a setting is given in more than one place, the first of these wins:
+
+1. `BLENDER_MCP_*` environment variables, including ones in a `.env` file
+2. `config.toml`
+3. Built-in defaults
+
+Only names with the `BLENDER_MCP_` prefix are read from the environment. Generic variables such as `PORT` or `HOST`, which other tools often set, are ignored.
+
 Important keys:
 
 | Setting | Default | Notes |
