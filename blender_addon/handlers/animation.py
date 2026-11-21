@@ -35,11 +35,7 @@ def create_keyframe(params: dict[str, Any]):
     if frame is not None:
         bpy.context.scene.frame_set(int(frame))
     obj.keyframe_insert(data_path=params["data_path"], index=int(params.get("index", -1)))
-    return {
-        "name": obj.name,
-        "data_path": params["data_path"],
-        "frame": bpy.context.scene.frame_current,
-    }
+    return {"name": obj.name, "data_path": params["data_path"], "frame": bpy.context.scene.frame_current}
 
 
 @command("set_keyframe")
@@ -76,12 +72,7 @@ def remove_keyframe(params: dict[str, Any]):
 @command("animate_location")
 def animate_location(params: dict[str, Any]):
     return set_keyframe(
-        {
-            "name": params["name"],
-            "data_path": "location",
-            "value": params["location"],
-            "frame": params["frame"],
-        }
+        {"name": params["name"], "data_path": "location", "value": params["location"], "frame": params["frame"]}
     )
 
 
@@ -100,17 +91,13 @@ def animate_rotation(params: dict[str, Any]):
 @command("animate_scale")
 def animate_scale(params: dict[str, Any]):
     return set_keyframe(
-        {
-            "name": params["name"],
-            "data_path": "scale",
-            "value": params["scale"],
-            "frame": params["frame"],
-        }
+        {"name": params["name"], "data_path": "scale", "value": params["scale"], "frame": params["frame"]}
     )
 
 
 @command("inspect_animation")
 def inspect_animation(params: dict[str, Any]):
+    import bpy
 
     if params.get("name"):
         obj = get_object(params["name"])
@@ -122,11 +109,7 @@ def inspect_animation(params: dict[str, Any]):
             "animated": True,
             "action": ad.action.name,
             "fcurves": [
-                {
-                    "data_path": fc.data_path,
-                    "array_index": fc.array_index,
-                    "keyframes": len(fc.keyframe_points),
-                }
+                {"data_path": fc.data_path, "array_index": fc.array_index, "keyframes": len(fc.keyframe_points)}
                 for fc in ad.action.fcurves
             ],
         }
@@ -138,7 +121,6 @@ def inspect_animation(params: dict[str, Any]):
 @command("create_animation_preview")
 def create_animation_preview(params: dict[str, Any]):
     import bpy
-
     from .. import screenshots
 
     scene = bpy.context.scene
@@ -149,7 +131,5 @@ def create_animation_preview(params: dict[str, Any]):
     for frame in range(start, end + 1, step):
         scene.frame_set(frame)
         capture = screenshots.capture_viewport(max_size=512)
-        frames.append(
-            {"frame": frame, "image_base64": capture.get("image_base64"), "mime_type": "image/png"}
-        )
+        frames.append({"frame": frame, "image_base64": capture.get("image_base64"), "mime_type": "image/png"})
     return {"frame_start": start, "frame_end": end, "step": step, "frames": frames}

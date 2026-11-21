@@ -85,11 +85,10 @@ For any other client, or if you ran only `uv sync` + `install-addon`, point it a
 
 ## Tool profiles
 
-By default the server exposes a **core** profile of 16 tools: `get_addon_status`,
-`get_scene_info`, `get_object_info`, `search_scene`, `execute_blender_code`, `lookup_api`,
-`look`, `search_assets`, `import_external_asset`, `generate_3d`, `get_generation_status`,
-`get_guide`, `blender_mcp_version`, `open_blender`, `close_blender`, and `blend_file`
-(open, save, rename and manage `.blend` files). Models choose tools more reliably from a short
+By default the server exposes a **core** profile of 12 tools: `get_addon_status`,
+`get_scene_info`, `get_object_info`, `search_scene`, `execute_blender_code`, `look`,
+`search_assets`, `import_external_asset`, `generate_3d`, `get_generation_status`,
+`get_guide`, and `blender_mcp_version`. Models choose tools more reliably from a short
 list, and `execute_blender_code` already covers the whole `bpy` API.
 
 To expose all ~170 specialised wrapper tools instead, set `BLENDER_MCP_TOOL_PROFILE=full`

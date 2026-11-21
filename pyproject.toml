@@ -70,10 +70,6 @@ src = ["src", "tests", "blender_addon"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
-[tool.ruff.lint.per-file-ignores]
-# One-shot generator: long lines are inside the code templates it writes out.
-"scripts/generate_tools.py" = ["E501"]
-
 [tool.pyright]
 include = ["src"]
 pythonVersion = "3.11"

@@ -20,11 +20,7 @@ def create_geometry_nodes_modifier(params: dict[str, Any]):
     elif group_name:
         group = bpy.data.node_groups.new(group_name, "GeometryNodeTree")
         mod.node_group = group
-    return {
-        "object": obj.name,
-        "modifier": mod.name,
-        "group": getattr(mod.node_group, "name", None),
-    }
+    return {"object": obj.name, "modifier": mod.name, "group": getattr(mod.node_group, "name", None)}
 
 
 @command("create_node_group")
@@ -35,12 +31,8 @@ def create_node_group(params: dict[str, Any]):
     group = bpy.data.node_groups.new(name, "GeometryNodeTree")
     # Blender 4+ interface API differs; create minimal group
     try:
-        group.interface.new_socket(
-            name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry"
-        )
-        group.interface.new_socket(
-            name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry"
-        )
+        group.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
+        group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
     except Exception:
         pass
     return {"name": group.name, "type": group.bl_idname}

@@ -50,8 +50,14 @@ def ensure_collection(name: str, parent: str | None = None):
     coll = bpy.data.collections.get(name)
     if coll is None:
         coll = bpy.data.collections.new(name)
-        parent_coll = bpy.data.collections.get(parent) if parent else None
-        (parent_coll or bpy.context.scene.collection).children.link(coll)
+        if parent:
+            parent_coll = bpy.data.collections.get(parent) or bpy.context.scene.collection
+            if parent and bpy.data.collections.get(parent):
+                bpy.data.collections[parent].children.link(coll)
+            else:
+                bpy.context.scene.collection.children.link(coll)
+        else:
+            bpy.context.scene.collection.children.link(coll)
     return coll
 
 

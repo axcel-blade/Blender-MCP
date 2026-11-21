@@ -35,7 +35,7 @@ def import_polyhaven_asset(params: dict[str, Any]):
                     break
     elif asset_type in {"textures", "texture"}:
         # Prefer blend or zip map packages when available — fall back to first file URL
-        for node in files.values():
+        for fmt, node in files.items():
             if isinstance(node, dict):
                 res_node = node.get(resolution) or next(iter(node.values()), {})
                 if isinstance(res_node, dict) and res_node.get("url"):

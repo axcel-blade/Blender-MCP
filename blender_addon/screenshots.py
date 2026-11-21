@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import base64
-import contextlib
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -102,11 +101,11 @@ def capture_viewport(
     if frame is None:
         frame = bool(view) and view.upper() != "CAMERA"
     if frame:
-        with (
-            bpy.context.temp_override(area=area, region=region),
-            contextlib.suppress(RuntimeError),
-        ):
-            bpy.ops.view3d.view_all(center=False)
+        with bpy.context.temp_override(area=area, region=region):
+            try:
+                bpy.ops.view3d.view_all(center=False)
+            except RuntimeError:
+                pass
 
     out = Path(tempfile.gettempdir()) / "blender_mcp_viewport.png"
     method = "viewport_render"

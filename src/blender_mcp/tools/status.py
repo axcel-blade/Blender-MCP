@@ -12,16 +12,7 @@ from blender_mcp.tools.registry import AppContext, call_blender
 from blender_mcp.utils.results import ok
 
 # Commands newer server features rely on; missing ones mean the addon is outdated.
-REQUIRED_COMMANDS = (
-    "import_local_asset",
-    "lookup_api",
-    "quit_blender",
-    "blend_file_info",
-    "rename_blend_file",
-    "save_copy",
-    "recent_blend_files",
-    "recover_blend_file",
-)
+REQUIRED_COMMANDS = ("import_local_asset", "lookup_api")
 
 
 def list_guides() -> list[str]:
@@ -72,18 +63,6 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
             "meshy": p.meshy and bool(p.meshy_api_key),
             "tripo": p.tripo and bool(p.tripo_api_key),
         }
-        from blender_mcp.tools import app
-
-        if app.starting() and not ctx.bridge.connected:
-            return ok(
-                {
-                    "server_version": __version__,
-                    "blender": "starting",
-                    "asset_libraries": providers,
-                    "generators": generators,
-                },
-                warning="Blender is still starting; check again in a few seconds.",
-            )
         diag = await call_blender(ctx, "diagnose_blender_connection", {}, group="scene")
         if diag.get("success") is False:
             return {

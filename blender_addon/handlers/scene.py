@@ -286,9 +286,7 @@ def get_lights(params: dict[str, Any]) -> list[dict[str, Any]]:
 @command("get_modifiers")
 def get_modifiers(params: dict[str, Any]) -> list[dict[str, Any]]:
     obj = get_object(params["name"])
-    return [
-        {"name": m.name, "type": m.type, "show_viewport": m.show_viewport} for m in obj.modifiers
-    ]
+    return [{"name": m.name, "type": m.type, "show_viewport": m.show_viewport} for m in obj.modifiers]
 
 
 @command("get_animation_info")

@@ -7,7 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -108,27 +108,21 @@ class Settings(BaseSettings):
         populate_by_name=True,
     )
 
-    host: str = Field(default="127.0.0.1")
-    port: int = Field(default=9877)
-    auth_token: str = Field(default="")
-    connection_timeout: float = Field(default=5.0)
-    request_timeout: float = Field(default=60.0)
+    host: str = Field(default="127.0.0.1", alias="HOST")
+    port: int = Field(default=9877, alias="PORT")
+    auth_token: str = Field(default="", alias="AUTH_TOKEN")
+    connection_timeout: float = Field(default=5.0, alias="CONNECTION_TIMEOUT")
+    request_timeout: float = Field(default=60.0, alias="REQUEST_TIMEOUT")
     command_timeouts: dict[str, float] = Field(default_factory=dict)
-    retry_count: int = Field(default=3)
-    retry_delay: float = Field(default=0.5)
-    heartbeat_interval: float = Field(default=15.0)
-    allow_remote: bool = Field(default=False)
+    retry_count: int = Field(default=3, alias="RETRY_COUNT")
+    retry_delay: float = Field(default=0.5, alias="RETRY_DELAY")
+    heartbeat_interval: float = Field(default=15.0, alias="HEARTBEAT_INTERVAL")
+    allow_remote: bool = Field(default=False, alias="ALLOW_REMOTE")
 
-    # Documented env name is BLENDER_MCP_SAFE_EXECUTION. A validation_alias is read
-    # verbatim (no prefix), so list the full prefixed names; populate_by_name still
-    # lets code (and config.toml) set it as safe_execution_mode.
-    safe_execution_mode: bool = Field(
-        default=True,
-        validation_alias=AliasChoices(
-            "BLENDER_MCP_SAFE_EXECUTION", "BLENDER_MCP_SAFE_EXECUTION_MODE"
-        ),
+    safe_execution_mode: bool = Field(default=True, alias="SAFE_EXECUTION")
+    script_permission: ScriptPermission = Field(
+        default=ScriptPermission.TRUSTED, alias="SCRIPT_PERMISSION"
     )
-    script_permission: ScriptPermission = Field(default=ScriptPermission.TRUSTED)
     confirm_destructive: bool = True
     confirm_overwrite: bool = True
     max_request_bytes: int = 1_048_576
@@ -143,11 +137,7 @@ class Settings(BaseSettings):
     render_max_time_seconds: int = 300
     render_default_engine: str = "CYCLES"
 
-    # Path to the Blender executable for open_blender; empty means auto-detect.
-    blender_path: str = Field(default="")
-    blender_launch_timeout: float = Field(default=60.0)
-
-    log_level: str = Field(default="INFO")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     log_file: str = ""
 
     polyhaven: bool = True
@@ -158,18 +148,18 @@ class Settings(BaseSettings):
     rodin: bool = False
     hunyuan3d: bool = False
 
-    sketchfab_api_key: str = Field(default="")
-    polypizza_api_key: str = Field(default="")
-    meshy_api_key: str = Field(default="")
-    tripo_api_key: str = Field(default="")
-    rodin_api_key: str = Field(default="")
-    hunyuan_secret_id: str = Field(default="")
-    hunyuan_secret_key: str = Field(default="")
+    sketchfab_api_key: str = Field(default="", alias="SKETCHFAB_API_KEY")
+    polypizza_api_key: str = Field(default="", alias="POLYPIZZA_API_KEY")
+    meshy_api_key: str = Field(default="", alias="MESHY_API_KEY")
+    tripo_api_key: str = Field(default="", alias="TRIPO_API_KEY")
+    rodin_api_key: str = Field(default="", alias="RODIN_API_KEY")
+    hunyuan_secret_id: str = Field(default="", alias="HUNYUAN_SECRET_ID")
+    hunyuan_secret_key: str = Field(default="", alias="HUNYUAN_SECRET_KEY")
 
     tool_groups: ToolGroupsConfig = Field(default_factory=ToolGroupsConfig)
     # "core": a small, high-leverage tool set (default; best for LLM accuracy).
     # "full": every specialised tool (~170) for clients that want narrow wrappers.
-    tool_profile: str = Field(default="core")
+    tool_profile: str = Field(default="core", alias="TOOL_PROFILE")
 
     @field_validator("tool_profile", mode="before")
     @classmethod
@@ -257,11 +247,7 @@ def _load_toml(path: Path) -> dict[str, Any]:
 
 
 def load_settings(config_path: str | Path | None = None) -> Settings:
-    """Load settings from an optional TOML file; environment variables win over it.
-
-    Precedence, highest first: ``BLENDER_MCP_*`` environment variables (and ``.env``),
-    then ``config.toml``, then built-in defaults.
-    """
+    """Load settings from optional TOML file, then apply environment overrides."""
     overrides: dict[str, Any] = {}
     path = Path(config_path) if config_path else Path("config.toml")
     if path.is_file():
@@ -318,14 +304,4 @@ def load_settings(config_path: str | Path | None = None) -> Settings:
         if "profile" in tools_cfg:
             overrides["tool_profile"] = tools_cfg["profile"]
 
-        blender_cfg = raw.get("blender", {})
-        if "path" in blender_cfg:
-            overrides["blender_path"] = blender_cfg["path"]
-        if "launch_timeout" in blender_cfg:
-            overrides["blender_launch_timeout"] = blender_cfg["launch_timeout"]
-
-    # Settings() reads only the environment and .env; the fields it reports as set are
-    # the ones the user configured there, and those must not be replaced by TOML values.
-    for name in Settings().model_fields_set:
-        overrides.pop(name, None)
     return Settings(**overrides)

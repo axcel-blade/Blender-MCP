@@ -34,9 +34,9 @@ def _create_primitive(params: dict[str, Any]) -> dict[str, Any]:
 
     if primitive in {"cube", "plane"} and params.get("size") is not None:
         kwargs["size"] = params["size"]
-    round_shapes = {"uv_sphere", "sphere", "ico_sphere", "cylinder", "cone", "circle"}
-    if primitive in round_shapes and params.get("radius") is not None:
-        kwargs["radius"] = params["radius"]
+    if primitive in {"uv_sphere", "sphere", "ico_sphere", "cylinder", "cone", "circle"}:
+        if params.get("radius") is not None:
+            kwargs["radius"] = params["radius"]
     if primitive == "ico_sphere" and params.get("subdivisions") is not None:
         kwargs["subdivisions"] = params["subdivisions"]
     if primitive in {"uv_sphere", "sphere"}:
@@ -269,6 +269,7 @@ def set_object_shading(params: dict[str, Any]) -> dict[str, Any]:
 
 @command("set_object_parent")
 def set_object_parent(params: dict[str, Any]) -> dict[str, Any]:
+    import bpy
 
     obj = get_object(params["name"])
     parent = get_object(params["parent"])

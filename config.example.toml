@@ -34,14 +34,8 @@ max_resolution_y = 1080
 max_time_seconds = 300
 default_engine = "CYCLES"
 
-[blender]
-# Blender executable for open_blender; empty means auto-detect. Env: BLENDER_MCP_BLENDER_PATH.
-path = ""
-# Seconds open_blender waits for the addon bridge. Env: BLENDER_MCP_BLENDER_LAUNCH_TIMEOUT.
-launch_timeout = 60
-
 [tools]
-# "core" (default): ~16 high-leverage tools, execute_blender_code + look first.
+# "core" (default): ~12 high-leverage tools, execute_blender_code + look first.
 # "full": every specialised wrapper tool (~170). Env: BLENDER_MCP_TOOL_PROFILE.
 profile = "core"
 

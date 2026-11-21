@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import addon_utils
+import bpy
+
 
 MODULE = "blender_mcp_addon"
 
