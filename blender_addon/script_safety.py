@@ -105,11 +105,27 @@ BLOCKED_BUILTINS: dict[str, str] = {
 }
 
 # Dunder attributes that lead out of normal code. Others (__name__, __class__) are fine.
-BLOCKED_DUNDERS = frozenset({
-    "__globals__", "__builtins__", "__subclasses__", "__code__", "__closure__",
-    "__bases__", "__mro__", "__base__", "__loader__", "__spec__", "__getattribute__",
-    "__reduce__", "__reduce_ex__", "__func__", "__self__", "__dict__", "__import__",
-})
+BLOCKED_DUNDERS = frozenset(
+    {
+        "__globals__",
+        "__builtins__",
+        "__subclasses__",
+        "__code__",
+        "__closure__",
+        "__bases__",
+        "__mro__",
+        "__base__",
+        "__loader__",
+        "__spec__",
+        "__getattribute__",
+        "__reduce__",
+        "__reduce_ex__",
+        "__func__",
+        "__self__",
+        "__dict__",
+        "__import__",
+    }
+)
 
 # Parts of the user preferences a script may not modify.
 _PREFS_ROOTS = ("bpy.context.preferences", "bpy.context.user_preferences")

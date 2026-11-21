@@ -155,13 +155,26 @@ def _live_instances() -> list[Any]:
     ctx = bpy.context
     scene = getattr(ctx, "scene", None)
     found: list[Any] = []
-    for obj in (scene, getattr(ctx, "object", None), getattr(ctx, "preferences", None),
-                getattr(scene, "world", None)):
+    for obj in (
+        scene,
+        getattr(ctx, "object", None),
+        getattr(ctx, "preferences", None),
+        getattr(scene, "world", None),
+    ):
         if obj is not None:
             found.append(obj)
     if scene is not None:
-        for attr in ("render", "cycles", "eevee", "view_settings", "display_settings",
-                     "display", "tool_settings", "unit_settings", "sequencer_colorspace_settings"):
+        for attr in (
+            "render",
+            "cycles",
+            "eevee",
+            "view_settings",
+            "display_settings",
+            "display",
+            "tool_settings",
+            "unit_settings",
+            "sequencer_colorspace_settings",
+        ):
             sub = getattr(scene, attr, None)
             if sub is not None:
                 found.append(sub)
@@ -176,7 +189,7 @@ def parse_enum_error(message: str) -> list[str] | None:
     if start < 0:
         return None
     try:
-        values = ast.literal_eval(message[start + 4:].strip())
+        values = ast.literal_eval(message[start + 4 :].strip())
     except (ValueError, SyntaxError):
         return None
     if isinstance(values, str):
@@ -209,8 +222,11 @@ def _lookup_type(name: str, member: str | None) -> dict[str, Any] | None:
     if cls is None or not hasattr(cls, "bl_rna"):
         # Add-on property groups (e.g. CyclesRenderSettings) aren't in bpy.types.
         inst = next(
-            (i for i in _live_instances() if getattr(i, "bl_rna", None)
-             and i.bl_rna.identifier == name),
+            (
+                i
+                for i in _live_instances()
+                if getattr(i, "bl_rna", None) and i.bl_rna.identifier == name
+            ),
             None,
         )
         if inst is None:
@@ -236,8 +252,10 @@ def _lookup_type(name: str, member: str | None) -> dict[str, Any] | None:
             "kind": "missing",
             "identifier": f"bpy.types.{name}.{member}",
             "error": f"{name} has no member {member!r}.",
-            "close_matches": _close(member, [p.identifier for p in rna.properties]
-                                    + [f.identifier for f in rna.functions]),
+            "close_matches": _close(
+                member,
+                [p.identifier for p in rna.properties] + [f.identifier for f in rna.functions],
+            ),
         }
     info = describe_struct(rna, cls)
     if issubclass(cls, bpy.types.Node):
@@ -324,13 +342,23 @@ def search(query: str, limit: int = 20) -> dict[str, Any]:
         if rna is None:
             continue
         if matches(name):
-            hits.append({"kind": "struct", "identifier": f"bpy.types.{name}",
-                         "description": rna.description})
+            hits.append(
+                {
+                    "kind": "struct",
+                    "identifier": f"bpy.types.{name}",
+                    "description": rna.description,
+                }
+            )
         for prop in rna.properties:
             if prop.identifier != "rna_type" and matches(name, prop.identifier):
-                hits.append({"kind": "property",
-                             "identifier": f"bpy.types.{name}.{prop.identifier}",
-                             "type": prop.type, "description": prop.description})
+                hits.append(
+                    {
+                        "kind": "property",
+                        "identifier": f"bpy.types.{name}.{prop.identifier}",
+                        "type": prop.type,
+                        "description": prop.description,
+                    }
+                )
         if len(hits) >= limit * 4:
             break
 
@@ -348,8 +376,10 @@ def search(query: str, limit: int = 20) -> dict[str, Any]:
 def lookup(query: str) -> dict[str, Any]:
     query = (query or "").strip()
     if not query:
-        raise ValueError("Pass an identifier (bpy.types.Scene, bpy.ops.mesh.primitive_cube_add, "
-                         "ShaderNodeBsdfPrincipled) or search words (bevel modifier width).")
+        raise ValueError(
+            "Pass an identifier (bpy.types.Scene, bpy.ops.mesh.primitive_cube_add, "
+            "ShaderNodeBsdfPrincipled) or search words (bevel modifier width)."
+        )
     ident = query.removeprefix("bpy.types.")
     if " " not in query:
         if query.startswith("bpy.ops."):

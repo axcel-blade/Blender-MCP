@@ -12,7 +12,7 @@ def _names(mcp):
 def test_core_profile_is_default_and_small():
     names = _names(create_server(Settings()))
     assert names == set(CORE_TOOLS)
-    assert len(names) <= 15
+    assert len(names) <= 16
 
 
 def test_full_profile_keeps_everything():

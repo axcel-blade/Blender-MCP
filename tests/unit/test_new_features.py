@@ -198,7 +198,7 @@ def test_guides_available():
 def test_addon_warnings_detect_outdated():
     from blender_mcp import __version__
 
-    current = {"addon_version": __version__, "commands": ["import_local_asset", "lookup_api"]}
+    current = {"addon_version": __version__, "commands": list(status.REQUIRED_COMMANDS)}
     assert status.addon_warnings(current) == []
     assert len(status.addon_warnings({"addon_version": "0.0.1", "commands": []})) == 2
 
