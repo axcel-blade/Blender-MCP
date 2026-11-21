@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import select
 import socket
@@ -84,17 +85,16 @@ def _mark_stopped(reason: str = "") -> None:
         _state["last_error"] = reason
         log(reason)
     if _server_socket is not None:
-        try:
+        with contextlib.suppress(OSError):
             _server_socket.close()
-        except OSError:
-            pass
     _server_socket = None
     _server_thread = None
 
 
 def _ensure_handlers_registered() -> None:
     try:
-        from .handlers import _REGISTRY, register as register_handlers
+        from .handlers import _REGISTRY
+        from .handlers import register as register_handlers
 
         if not _REGISTRY:
             register_handlers()
@@ -119,10 +119,7 @@ def start_server() -> dict[str, Any]:
     port = DEFAULT_PORT
     if prefs is not None:
         port = int(prefs.port)
-        if prefs.allow_remote:
-            host = prefs.bind_address or "0.0.0.0"
-        else:
-            host = "127.0.0.1"
+        host = (prefs.bind_address or "0.0.0.0") if prefs.allow_remote else "127.0.0.1"
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
@@ -161,10 +158,8 @@ def stop_server() -> dict[str, Any]:
     _stop_event.set()
     _state["running"] = False
     if _server_socket is not None:
-        try:
+        with contextlib.suppress(OSError):
             _server_socket.close()
-        except OSError:
-            pass
     _server_socket = None
     if _server_thread is not None and _server_thread.is_alive():
         _server_thread.join(timeout=2.0)
@@ -181,7 +176,7 @@ def _serve_loop() -> None:
         while not _stop_event.is_set():
             try:
                 client, addr = _server_socket.accept()
-            except socket.timeout:
+            except TimeoutError:
                 continue
             except OSError as exc:
                 if not _stop_event.is_set():
@@ -189,7 +184,10 @@ def _serve_loop() -> None:
                 break
             log(f"Client connected from {addr}")
             threading.Thread(
-                target=_handle_client, args=(client, addr), name=f"BlenderMCPClient-{addr}", daemon=True
+                target=_handle_client,
+                args=(client, addr),
+                name=f"BlenderMCPClient-{addr}",
+                daemon=True,
             ).start()
     finally:
         # Always clear RUNNING so Start / Connection Test reflect reality.
@@ -211,7 +209,16 @@ def _handle_client(client: socket.socket, addr: Any) -> None:
                 break
             buffer += chunk
             if len(buffer) > MAX_REQUEST_BYTES:
-                _send(client, {"type": "response", "id": "", "success": False, "error_code": "INVALID_PARAMETER", "error": "Request too large"})
+                _send(
+                    client,
+                    {
+                        "type": "response",
+                        "id": "",
+                        "success": False,
+                        "error_code": "INVALID_PARAMETER",
+                        "error": "Request too large",
+                    },
+                )
                 break
             while b"\n" in buffer:
                 line, buffer = buffer.split(b"\n", 1)
@@ -235,14 +242,33 @@ def _handle_client(client: socket.socket, addr: Any) -> None:
                 msg_type = message.get("type")
                 if msg_type == "auth":
                     ok, info = _authenticate(message.get("token", ""))
-                    _send(client, {"type": "response", "id": "", "success": ok, "result": info if ok else None, "error": None if ok else "Authentication failed", "error_code": None if ok else "AUTH_FAILED"})
+                    _send(
+                        client,
+                        {
+                            "type": "response",
+                            "id": "",
+                            "success": ok,
+                            "result": info if ok else None,
+                            "error": None if ok else "Authentication failed",
+                            "error_code": None if ok else "AUTH_FAILED",
+                        },
+                    )
                     authenticated = ok
                     if not ok:
                         return
                     continue
 
                 if not authenticated:
-                    _send(client, {"type": "response", "id": message.get("id", ""), "success": False, "error_code": "AUTH_FAILED", "error": "Not authenticated"})
+                    _send(
+                        client,
+                        {
+                            "type": "response",
+                            "id": message.get("id", ""),
+                            "success": False,
+                            "error_code": "AUTH_FAILED",
+                            "error": "Not authenticated",
+                        },
+                    )
                     return
 
                 if msg_type == "ping":
@@ -257,10 +283,8 @@ def _handle_client(client: socket.socket, addr: Any) -> None:
         _state["last_error"] = str(exc)
         log(f"Client error {addr}: {exc}")
     finally:
-        try:
+        with contextlib.suppress(OSError):
             client.close()
-        except OSError:
-            pass
         _state["clients"] = max(0, int(_state.get("clients", 1)) - 1)
         log(f"Client disconnected {addr}")
 
@@ -271,6 +295,7 @@ def _authenticate(token: str) -> tuple[bool, dict[str, Any]]:
     if expected and token != expected:
         return False, {}
     import bpy
+
     from . import ADDON_VERSION
 
     return True, {

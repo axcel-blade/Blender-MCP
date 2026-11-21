@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import importlib
 import sys
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 Handler = Callable[[dict[str, Any]], Any]
 _REGISTRY: dict[str, Handler] = {}
@@ -87,6 +88,8 @@ def register() -> None:
         full = f"{root}.{helper}"
         if full in sys.modules:
             importlib.reload(sys.modules[full])
+    unsaved = importlib.import_module(f"{root}.unsaved")
+    unsaved.register()
     for name in _HANDLER_MODULES:
         full = f"{pkg}.{name}"
         if full in sys.modules:
@@ -97,3 +100,6 @@ def register() -> None:
 
 def unregister() -> None:
     _REGISTRY.clear()
+    unsaved = sys.modules.get(f"{__name__.rsplit('.', 1)[0]}.unsaved")
+    if unsaved is not None:
+        unsaved.unregister()

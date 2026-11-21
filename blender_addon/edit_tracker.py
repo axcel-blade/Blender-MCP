@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 MAX_OBJECTS = 5000  # skip tracking in huge scenes; snapshots would get slow
-MAX_REPORTED = 40   # cap each list in a report
+MAX_REPORTED = 40  # cap each list in a report
 _PRECISION = 4
 
 _baseline: dict[str, Any] | None = None

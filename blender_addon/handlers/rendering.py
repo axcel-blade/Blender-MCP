@@ -79,8 +79,9 @@ def set_output_path(params: dict[str, Any]):
 
 
 def _render(params: dict[str, Any], *, preview: bool = False, final: bool = False):
-    import bpy
     import tempfile
+
+    import bpy
 
     scene = bpy.context.scene
     if params.get("engine"):

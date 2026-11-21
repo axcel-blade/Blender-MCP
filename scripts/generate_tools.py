@@ -55,7 +55,11 @@ write(
         (
             "edit_mesh",
             "meshes",
-            [("name", "str", Ellipsis), ("operation", "str", Ellipsis), ("params", "dict[str, Any] | None", "None")],
+            [
+                ("name", "str", Ellipsis),
+                ("operation", "str", Ellipsis),
+                ("params", "dict[str, Any] | None", "None"),
+            ],
             '"name": name, "operation": operation, "params": params or {}',
             "Run a structured mesh edit operation on an object.",
         ),
@@ -179,7 +183,11 @@ write(
         (
             "modify_modifier",
             "modifiers",
-            [("name", "str", Ellipsis), ("modifier_name", "str", Ellipsis), ("settings", "dict[str, Any]", Ellipsis)],
+            [
+                ("name", "str", Ellipsis),
+                ("modifier_name", "str", Ellipsis),
+                ("settings", "dict[str, Any]", Ellipsis),
+            ],
             '"name": name, "modifier_name": modifier_name, "settings": settings',
             "Update modifier settings.",
         ),
@@ -219,7 +227,11 @@ write(
         (
             "assign_material",
             "materials",
-            [("object_name", "str", Ellipsis), ("material_name", "str", Ellipsis), ("slot", "int", "0")],
+            [
+                ("object_name", "str", Ellipsis),
+                ("material_name", "str", Ellipsis),
+                ("slot", "int", "0"),
+            ],
             '"object_name": object_name, "material_name": material_name, "slot": slot',
             "Assign a material to an object.",
         ),
@@ -269,28 +281,44 @@ write(
         (
             "create_emission_material",
             "materials",
-            [("name", "str | None", "None"), ("color", "list[float] | None", "None"), ("strength", "float", "5.0")],
+            [
+                ("name", "str | None", "None"),
+                ("color", "list[float] | None", "None"),
+                ("strength", "float", "5.0"),
+            ],
             '"name": name, "color": color, "strength": strength',
             "Create an emission material.",
         ),
         (
             "create_metallic_material",
             "materials",
-            [("name", "str | None", "None"), ("color", "list[float] | None", "None"), ("roughness", "float", "0.2")],
+            [
+                ("name", "str | None", "None"),
+                ("color", "list[float] | None", "None"),
+                ("roughness", "float", "0.2"),
+            ],
             '"name": name, "color": color, "roughness": roughness',
             "Create a metallic material.",
         ),
         (
             "create_glass_material",
             "materials",
-            [("name", "str | None", "None"), ("ior", "float", "1.45"), ("roughness", "float", "0.0")],
+            [
+                ("name", "str | None", "None"),
+                ("ior", "float", "1.45"),
+                ("roughness", "float", "0.0"),
+            ],
             '"name": name, "ior": ior, "roughness": roughness',
             "Create a glass material.",
         ),
         (
             "create_transparent_material",
             "materials",
-            [("name", "str | None", "None"), ("alpha", "float", "0.3"), ("color", "list[float] | None", "None")],
+            [
+                ("name", "str | None", "None"),
+                ("alpha", "float", "0.3"),
+                ("color", "list[float] | None", "None"),
+            ],
             '"name": name, "alpha": alpha, "color": color',
             "Create a transparent material.",
         ),
@@ -343,7 +371,11 @@ write(
         (
             "add_geometry_node",
             "geometry_nodes",
-            [("group_name", "str", Ellipsis), ("node_type", "str", Ellipsis), ("node_name", "str | None", "None")],
+            [
+                ("group_name", "str", Ellipsis),
+                ("node_type", "str", Ellipsis),
+                ("node_name", "str | None", "None"),
+            ],
             '"group_name": group_name, "node_type": node_type, "node_name": node_name',
             "Add a node to a geometry node group.",
         ),
@@ -363,7 +395,12 @@ write(
         (
             "set_geometry_node_input",
             "geometry_nodes",
-            [("group_name", "str", Ellipsis), ("node_name", "str", Ellipsis), ("input_name", "str", Ellipsis), ("value", "Any", Ellipsis)],
+            [
+                ("group_name", "str", Ellipsis),
+                ("node_name", "str", Ellipsis),
+                ("input_name", "str", Ellipsis),
+                ("value", "Any", Ellipsis),
+            ],
             '"group_name": group_name, "node_name": node_name, "input_name": input_name, "value": value',
             "Set a geometry node input value.",
         ),
@@ -439,7 +476,12 @@ write(
         (
             "configure_camera_lens",
             "cameras",
-            [("name", "str", Ellipsis), ("lens", "float | None", "None"), ("type", "str | None", "None"), ("ortho_scale", "float | None", "None")],
+            [
+                ("name", "str", Ellipsis),
+                ("lens", "float | None", "None"),
+                ("type", "str | None", "None"),
+                ("ortho_scale", "float | None", "None"),
+            ],
             '"name": name, "lens": lens, "type": type, "ortho_scale": ortho_scale',
             "Configure camera lens settings.",
         ),
@@ -548,7 +590,11 @@ write(
         (
             "render_animation",
             "rendering",
-            [("frame_start", "int | None", "None"), ("frame_end", "int | None", "None"), ("output_path", "str | None", "None")],
+            [
+                ("frame_start", "int | None", "None"),
+                ("frame_end", "int | None", "None"),
+                ("output_path", "str | None", "None"),
+            ],
             '"frame_start": frame_start, "frame_end": frame_end, "output_path": output_path',
             "Render an animation range.",
         ),
@@ -578,42 +624,68 @@ write(
         (
             "create_keyframe",
             "animation",
-            [("name", "str", Ellipsis), ("data_path", "str", Ellipsis), ("frame", "int | None", "None"), ("index", "int", "-1")],
+            [
+                ("name", "str", Ellipsis),
+                ("data_path", "str", Ellipsis),
+                ("frame", "int | None", "None"),
+                ("index", "int", "-1"),
+            ],
             '"name": name, "data_path": data_path, "frame": frame, "index": index',
             "Insert a keyframe on an object.",
         ),
         (
             "set_keyframe",
             "animation",
-            [("name", "str", Ellipsis), ("data_path", "str", Ellipsis), ("value", "Any", Ellipsis), ("frame", "int | None", "None")],
+            [
+                ("name", "str", Ellipsis),
+                ("data_path", "str", Ellipsis),
+                ("value", "Any", Ellipsis),
+                ("frame", "int | None", "None"),
+            ],
             '"name": name, "data_path": data_path, "value": value, "frame": frame',
             "Set a property value and keyframe it.",
         ),
         (
             "remove_keyframe",
             "animation",
-            [("name", "str", Ellipsis), ("data_path", "str", Ellipsis), ("frame", "int | None", "None")],
+            [
+                ("name", "str", Ellipsis),
+                ("data_path", "str", Ellipsis),
+                ("frame", "int | None", "None"),
+            ],
             '"name": name, "data_path": data_path, "frame": frame',
             "Remove a keyframe.",
         ),
         (
             "animate_location",
             "animation",
-            [("name", "str", Ellipsis), ("location", "list[float]", Ellipsis), ("frame", "int", Ellipsis)],
+            [
+                ("name", "str", Ellipsis),
+                ("location", "list[float]", Ellipsis),
+                ("frame", "int", Ellipsis),
+            ],
             '"name": name, "location": location, "frame": frame',
             "Keyframe object location.",
         ),
         (
             "animate_rotation",
             "animation",
-            [("name", "str", Ellipsis), ("rotation", "list[float]", Ellipsis), ("frame", "int", Ellipsis)],
+            [
+                ("name", "str", Ellipsis),
+                ("rotation", "list[float]", Ellipsis),
+                ("frame", "int", Ellipsis),
+            ],
             '"name": name, "rotation": rotation, "frame": frame',
             "Keyframe object rotation.",
         ),
         (
             "animate_scale",
             "animation",
-            [("name", "str", Ellipsis), ("scale", "list[float]", Ellipsis), ("frame", "int", Ellipsis)],
+            [
+                ("name", "str", Ellipsis),
+                ("scale", "list[float]", Ellipsis),
+                ("frame", "int", Ellipsis),
+            ],
             '"name": name, "scale": scale, "frame": frame',
             "Keyframe object scale.",
         ),
@@ -631,11 +703,21 @@ write(
             '"frame": frame',
             "Set the current frame.",
         ),
-        ("inspect_animation", "animation", [("name", "str | None", "None")], '"name": name', "Inspect animation data."),
+        (
+            "inspect_animation",
+            "animation",
+            [("name", "str | None", "None")],
+            '"name": name',
+            "Inspect animation data.",
+        ),
         (
             "create_animation_preview",
             "animation",
-            [("frame_start", "int | None", "None"), ("frame_end", "int | None", "None"), ("step", "int", "5")],
+            [
+                ("frame_start", "int | None", "None"),
+                ("frame_end", "int | None", "None"),
+                ("step", "int", "5"),
+            ],
             '"frame_start": frame_start, "frame_end": frame_end, "step": step',
             "Capture frames for an animation preview strip.",
         ),
@@ -670,7 +752,11 @@ write(
         (
             "move_object_to_collection",
             "collections",
-            [("object_name", "str", Ellipsis), ("collection", "str", Ellipsis), ("exclusive", "bool", "True")],
+            [
+                ("object_name", "str", Ellipsis),
+                ("collection", "str", Ellipsis),
+                ("exclusive", "bool", "True"),
+            ],
             '"object_name": object_name, "collection": collection, "exclusive": exclusive',
             "Move an object into a collection.",
         ),
@@ -712,7 +798,11 @@ write(
         (
             "export_asset",
             "import_export",
-            [("path", "str", Ellipsis), ("objects", "list[str] | None", "None"), ("overwrite", "bool", "False")],
+            [
+                ("path", "str", Ellipsis),
+                ("objects", "list[str] | None", "None"),
+                ("overwrite", "bool", "False"),
+            ],
             '"path": path, "objects": objects, "overwrite": overwrite',
             "Export selected or named objects.",
         ),
@@ -769,7 +859,11 @@ write(
         (
             "capture_viewport",
             "screenshots",
-            [("max_size", "int | None", "None"), ("view", "str | None", "None"), ("shading", "str | None", "None")],
+            [
+                ("max_size", "int | None", "None"),
+                ("view", "str | None", "None"),
+                ("shading", "str | None", "None"),
+            ],
             '"max_size": max_size, "view": view, "shading": shading',
             "Capture the viewport with optional view/shading overrides.",
         ),
