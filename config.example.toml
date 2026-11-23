@@ -42,7 +42,7 @@ launch_timeout = 60
 
 [tools]
 # "core" (default): ~16 high-leverage tools, execute_blender_code + look first.
-# "full": every specialised wrapper tool (~170). Env: BLENDER_MCP_TOOL_PROFILE.
+# "full": every specialised wrapper tool (~340). Env: BLENDER_MCP_TOOL_PROFILE.
 profile = "core"
 
 [tool_groups]
@@ -61,6 +61,19 @@ import_export = true
 collections = true
 screenshots = true
 scripting = true
+sculpting = true
+uv = true
+rigging = true
+physics = true
+compositing = true
+video_editing = true
+grease_pencil = true
+environment = true      # world, terrain, vegetation, architecture, scene generators
+analysis = true         # scene audit, 3D-print and game-asset checks
+library = true          # asset marking, append/link, pack/unpack
+safety = true           # checkpoints, undo/redo, execution history
+automation = true       # batch_apply, batch_render, run_workflow
+addons = true           # list/enable/disable Blender add-ons
 
 [providers]
 polyhaven = true

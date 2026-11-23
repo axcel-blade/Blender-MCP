@@ -47,11 +47,23 @@ def serialize_object(obj) -> dict[str, Any]:
 def ensure_collection(name: str, parent: str | None = None):
     import bpy
 
+    scene_root = bpy.context.scene.collection
+    in_scene = list(scene_root.children_recursive)
     coll = bpy.data.collections.get(name)
-    if coll is None:
-        coll = bpy.data.collections.new(name)
-        parent_coll = bpy.data.collections.get(parent) if parent else None
-        (parent_coll or bpy.context.scene.collection).children.link(coll)
+    if coll is not None and coll in in_scene:
+        return coll
+    # A same-named collection may live only in another scene; Blender then names ours
+    # "Name.001". Reuse such a variant if this scene already has one.
+    for candidate in in_scene:
+        base, dot, suffix = candidate.name.rpartition(".")
+        if dot and base == name and suffix.isdigit():
+            return candidate
+    # New collection in this scene (never pull another scene's contents in).
+    coll = bpy.data.collections.new(name)
+    parent_coll = bpy.data.collections.get(parent) if parent else None
+    if parent_coll is not None and parent_coll not in in_scene:
+        parent_coll = None
+    (parent_coll or scene_root).children.link(coll)
     return coll
 
 

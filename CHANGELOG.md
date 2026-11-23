@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-23
+
+### Added
+
+- Full-profile tool coverage for complete production work: about 170 new tools, with matching addon commands, in eight new modules.
+  - **Sculpting & UV**: brush selection, headless brush-style `sculpt_deform` (draw, clay, inflate, smooth, grab, snake hook, crease, flatten, scrape, pinch), real viewport strokes, masks, face sets, Dyntopo, voxel remesh, Multires; `uv_unwrap` (smart, angle-based, cube, cylinder, sphere, lightmap), seams, packing and UV diagnostics.
+  - **Rigging & animation**: armatures with a humanoid template, bones, bone and object constraints, IK/FK with poles, control widgets, automatic skinning, weight painting, posing, walk cycles, `validate_rig` and `test_rig_deformation`. Keyframes on any property (including materials, lights and cameras), interpolation, loops, F-curve modifiers, retiming, baking, motion paths, follow-path, turntables, animated 3D text, BVH/FBX motion capture import and retargeting.
+  - **Physics**: rigid bodies, soft bodies, cloth presets, collisions, Mantaflow fluids, smoke and fire, quick effects, particles and hair, force fields, gravity, Voronoi `fracture_object` for destruction, baking and cache management.
+  - **Rendering, lighting & cameras**: Cycles (with GPU backend selection), EEVEE and Workbench setup, render passes, colour management, image and video output formats, quality profiles, `batch_render` per camera; light colour temperature, size and shadows, studio and cinematic light rigs, `analyze_lighting`; camera tracking, orbit, dolly, crane and handheld rigs, composition guides, multi-view cameras.
+  - **Compositing, video editing & 2D**: compositor nodes and one-call effects (glare/bloom, blur, colour grade, vignette, denoise, lens distortion, sharpen, exposure), alpha-over; VSE movie, sound, image, colour and text strips, transitions, effects, cut, trim, fades, audio sync and video render; Grease Pencil drawing, shapes, frame-by-frame animation and modifiers (GPv2 and GPv3).
+  - **Environments & architecture**: world colour, HDRI, physical sky, fog and volumes, clouds and weather; procedural terrain, ocean and lakes, vegetation, surface scattering; rooms with openings, furniture, buildings, stairs, castles, cities and villages; `generate_environment` presets (forest, mountains, desert, ocean, island, winter, alien planet, space, ...), product studio shots and 3D data visualisation.
+  - **Modeling & materials**: booleans, loop cuts, bisect/knife, bridging, dissolve, raw geometry, spin/lathe, exact dimensions, scene units, measurement, array-along-curve; Geometry Nodes scattering and parametric objects; shader-node editing, 28 procedural PBR material presets and PBR texture-map wiring.
+  - **Production**: `analyze_scene` project audit with a health score, mesh topology analysis, missing-file detection and relinking, 3D-print checks and fixes, game-asset checks, prep with LODs, and engine-specific export (Unreal, Unity, Godot, web); Asset Browser marking and tags, append and link from `.blend` files, pack/unpack, orphan purge; add-on listing and toggling; checkpoints, undo/redo, execution history; `batch_apply`, `batch_rename`, `batch_export` and `run_workflow` for multi-step plans; motion tracking (load clip, track, solve camera).
+- `get_guide("workflows")`: maps creative requests to tool sequences and production rules.
+- New tool groups: `sculpting`, `uv`, `rigging`, `physics`, `compositing`, `video_editing`, `grease_pencil`, `environment`, `analysis`, `library`, `safety`, `automation`, `addons`.
+- Tools that read or write files check their paths against `security.allowed_directories`.
+- Longer default timeouts for bakes, batch renders, workflows and scene generators.
+
+### Changed
+
+- Each successful addon command that changes the scene pushes its own undo step (`MCP: <command>`). The addon keeps a log of the last 500 commands for `get_execution_history`.
+- The core profile is unchanged. All new tools are in the full profile only.
+
+### Fixed
+
+- Objects created into a named collection could end up invisible: when a collection with that name already existed only in another scene, it was reused without being linked into the active scene. Tools now use (or create, e.g. `Castle.001`) a collection that belongs to the active scene, and never pull in another scene's contents.
+- `sculpt_stroke` failed on Blender 5.x because stroke elements no longer accept `pen_flip`. Stroke keys are now matched to the running Blender's API.
+- `get_undo_history` returned an empty list on Blender 5.x. It now reads `WindowManager.undo_stack`.
+
 ## [1.5.0] - 2026-11-21
 
 ### Added
