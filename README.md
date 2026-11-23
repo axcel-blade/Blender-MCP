@@ -92,7 +92,7 @@ By default the server exposes a **core** profile of 16 tools: `get_addon_status`
 (open, save, rename and manage `.blend` files). Models choose tools more reliably from a short
 list, and `execute_blender_code` already covers the whole `bpy` API.
 
-To expose all ~170 specialised wrapper tools instead, set `BLENDER_MCP_TOOL_PROFILE=full`
+To expose all ~340 specialised wrapper tools (sculpting, rigging, physics, compositing, VSE, Grease Pencil, environments, QC, batch automation, ...) instead, set `BLENDER_MCP_TOOL_PROFILE=full`
 or put `profile = "full"` under `[tools]` in `config.toml`.
 
 ## Documentation

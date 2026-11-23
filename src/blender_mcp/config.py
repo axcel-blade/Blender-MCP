@@ -73,6 +73,19 @@ class ToolGroupsConfig(BaseModel):
     collections: bool = True
     screenshots: bool = True
     scripting: bool = True
+    sculpting: bool = True
+    uv: bool = True
+    rigging: bool = True
+    physics: bool = True
+    compositing: bool = True
+    video_editing: bool = True
+    grease_pencil: bool = True
+    environment: bool = True
+    analysis: bool = True
+    library: bool = True
+    safety: bool = True
+    automation: bool = True
+    addons: bool = True
 
 
 class ProvidersConfig(BaseModel):
