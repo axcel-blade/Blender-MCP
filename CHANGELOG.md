@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-23
+
 ### Added
 
 - Full-profile tool coverage for complete production work: about 170 new tools, with matching addon commands, in eight new modules.
