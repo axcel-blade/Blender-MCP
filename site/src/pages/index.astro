@@ -3,67 +3,119 @@ import Layout from "../layouts/Layout.astro";
 import "../styles/home.css";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const installPs1 = `${base}/install.ps1`;
-const installSh = `${base}/install.sh`;
+const repo = "https://github.com/axcel-blade/Blender-MCP";
+const docs = `${repo}/blob/main/docs`;
 
 const winCmd = `irm https://axcel-blade.github.io/Blender-MCP/install.ps1 | iex`;
 const unixCmd = `curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh | sh`;
 ---
 
 <Layout>
-  <main class="page">
-    <p class="eyebrow">Blender · MCP</p>
-    <h1>Blender MCP</h1>
+  <section class="hero">
+    <h1>Build in Blender by describing it.</h1>
     <p class="lede">
-      Connect Claude, Cursor, VS Code, and other MCP clients to a live Blender
-      session. One command installs uv, clones the repo, syncs dependencies, and
-      installs the addon.
+      An MCP server that lets Claude, ChatGPT and other AI assistants drive a live Blender
+      session. It turns requests for scenes, characters, product shots and animations into
+      real Blender objects, materials, rigs and renders, then inspects and refines them.
     </p>
+    <div class="cta">
+      <a class="btn primary" href="#install">Install</a>
+      <a class="btn" href={`${docs}/TOOLS.md`}>Browse 339 tools</a>
+      <a class="btn" href={repo}>View on GitHub</a>
+    </div>
+  </section>
 
-    <section class="panel">
-      <h2>Windows (PowerShell)</h2>
-      <div class="command">
-        <pre><code>{winCmd}</code></pre>
-        <button class="copy" type="button" data-copy={winCmd}>Copy</button>
+  <section class="section" id="install" aria-labelledby="install-h">
+    <h2 id="install-h">Install</h2>
+    <div class="install">
+      <div class="card">
+        <h3>Windows</h3>
+        <p>
+          PowerShell. Installs uv, the server and the Blender add-on, and registers it with your
+          AI clients.
+        </p>
+        <div class="cmd">
+          <code>{winCmd}</code>
+          <button class="copy" type="button" data-copy={winCmd}>Copy</button>
+        </div>
       </div>
-      <p style="margin: 0.75rem 0 0; color: var(--muted); font-size: 0.95rem;">
-        Script URL: <a href={installPs1}>{installPs1}</a>
-      </p>
-    </section>
-
-    <section class="panel">
-      <h2>macOS / Linux</h2>
-      <div class="command">
-        <pre><code>{unixCmd}</code></pre>
-        <button class="copy" type="button" data-copy={unixCmd}>Copy</button>
+      <div class="card">
+        <h3>macOS / Linux</h3>
+        <p>
+          Terminal. Installs uv, the server and the Blender add-on, and registers it with your AI
+          clients.
+        </p>
+        <div class="cmd">
+          <code>{unixCmd}</code>
+          <button class="copy" type="button" data-copy={unixCmd}>Copy</button>
+        </div>
       </div>
-      <p style="margin: 0.75rem 0 0; color: var(--muted); font-size: 0.95rem;">
-        Script URL: <a href={installSh}>{installSh}</a>
-      </p>
-    </section>
-
-    <section class="panel">
-      <h2>After install</h2>
+    </div>
+    <p class="note">
+      Configures the MCP clients it finds: Claude Desktop, Claude Code, Cursor, Windsurf, VS Code,
+      Cline, Roo Code, Continue, Zed, Gemini CLI and Codex. Scripts:
+      <a href={`${base}/install.ps1`}>install.ps1</a>, <a href={`${base}/install.sh`}>install.sh</a>.
+      <a href={`${docs}/INSTALLATION.md`}>Details</a>.
+    </p>
+    <div class="card" style="margin-top: 14px;">
+      <h3>After install</h3>
       <ol class="steps">
-        <li>
-          Blender → Edit → Preferences → Add-ons → enable <strong>Blender MCP</strong>
-        </li>
-        <li>3D Viewport → press <strong>N</strong> → <strong>Blender MCP</strong> → Start</li>
-        <li>Fully quit and reopen your MCP client</li>
+        <li>Blender → Edit → Preferences → Add-ons → enable <strong>Blender MCP</strong>.</li>
+        <li>3D Viewport → press <kbd>N</kbd> → <strong>Blender MCP</strong> → Start.</li>
+        <li>Fully quit and reopen your MCP client.</li>
       </ol>
-    </section>
+    </div>
+  </section>
 
-    <nav class="links">
-      <a href="https://github.com/axcel-blade/Blender-MCP">GitHub</a>
-      <a
-        href="https://github.com/axcel-blade/Blender-MCP/blob/develop/docs/INSTALLATION.md"
-        >Docs</a
-      >
-      <a href="https://github.com/axcel-blade/Blender-MCP/blob/develop/SECURITY.md"
-        >Security</a
-      >
-    </nav>
-  </main>
+  <section class="section" aria-labelledby="what-h">
+    <h2 id="what-h">What it does</h2>
+    <div class="features">
+      <div class="card">
+        <div class="stat">339</div>
+        <p>
+          MCP tools: modeling, sculpting, UVs, materials, geometry nodes, rigging, animation,
+          physics, lighting, cameras, rendering, compositing and video editing.
+        </p>
+      </div>
+      <div class="card">
+        <div class="stat">Scenes</div>
+        <p>
+          One-call generators build coherent environments, cities, castles, interiors and product
+          studios at real-world scale, with lighting and a framed camera.
+        </p>
+      </div>
+      <div class="card">
+        <div class="stat">Python</div>
+        <p>
+          Anything a tool doesn't cover runs as bpy code in your Blender, with an API lookup that
+          matches your installed version.
+        </p>
+      </div>
+      <div class="card">
+        <div class="stat">Safe</div>
+        <p>
+          Every command is its own undo step. Checkpoints, confirmations for destructive actions
+          and an allow-list for file paths keep your project safe.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="how-h">
+    <h2 id="how-h">How it works</h2>
+    <ol class="flow">
+      <li>You describe what you want to your assistant.</li>
+      <li>The server picks the tools and sends commands over a local bridge.</li>
+      <li>The Blender add-on builds it with the bpy API on Blender's main thread.</li>
+      <li>The assistant looks at the viewport or a render and refines.</li>
+    </ol>
+    <p class="note">
+      Details: <a href={`${docs}/ARCHITECTURE.md`}>architecture</a>,
+      <a href={`${docs}/CONFIGURATION.md`}>configuration</a>,
+      <a href={`${docs}/TROUBLESHOOTING.md`}>troubleshooting</a>,
+      <a href={`${repo}/blob/main/SECURITY.md`}>security</a>.
+    </p>
+  </section>
 </Layout>
 
 <script>

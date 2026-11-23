@@ -59,6 +59,7 @@ def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
         assets,
         cameras,
         collections,
+        environment,
         files,
         generation,
         geometry_nodes,
@@ -66,12 +67,19 @@ def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
         lighting,
         materials,
         meshes,
+        modeling,
         modifiers,
         objects,
+        physics,
+        post,
+        production,
+        render_config,
         rendering,
+        rigging,
         scene,
         screenshots,
         scripting,
+        sculpting,
         status,
     )
 
@@ -95,6 +103,15 @@ def register_all_tools(mcp: FastMCP, ctx: AppContext) -> None:
         status,
         app,
         files,
+        # Capability expansion (full profile only).
+        modeling,
+        sculpting,
+        rigging,
+        physics,
+        render_config,
+        post,
+        environment,
+        production,
     ]
     for module in modules:
         module.register(mcp, ctx)
@@ -119,3 +136,44 @@ async def call_blender(
         return fail_from_exception(exc)
     except Exception as exc:  # noqa: BLE001
         return fail_from_exception(exc)
+
+
+async def call_blender_paths(
+    ctx: AppContext,
+    command: str,
+    params: dict[str, Any],
+    *,
+    group: str,
+    path_keys: tuple[str, ...] = ("path",),
+    must_exist: bool = True,
+) -> dict[str, Any]:
+    """Like ``call_blender`` but first checks file paths against ``allowed_directories``.
+
+    Values may be a string or a list/dict of strings (e.g. a PBR ``maps`` dict).
+    """
+    from blender_mcp.security.validation import validate_path
+    from blender_mcp.utils.results import fail_from_exception
+
+    dirs = ctx.settings.allowed_directories
+    try:
+        for key in path_keys:
+            value = params.get(key)
+            if not value:
+                continue
+            values = (
+                value.values()
+                if isinstance(value, dict)
+                else value
+                if isinstance(value, list)
+                else [value]
+            )
+            for item in values:
+                validate_path(str(item), allowed_directories=dirs, must_exist=must_exist)
+    except Exception as exc:  # noqa: BLE001
+        return fail_from_exception(exc)
+    return await call_blender(ctx, command, params, group=group)
+
+
+def forward_params(local_vars: dict[str, Any]) -> dict[str, Any]:
+    """Turn a tool function's ``locals()`` into bridge params (drops ctx and unset values)."""
+    return {k: v for k, v in local_vars.items() if k not in {"ctx", "mcp"} and v is not None}
