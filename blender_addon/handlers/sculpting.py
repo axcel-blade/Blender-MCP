@@ -344,7 +344,6 @@ def sculpt_stroke(params: dict[str, Any]):
                     "location": p,
                     "mouse": (co2d.x, co2d.y),
                     "mouse_event": (co2d.x, co2d.y),
-                    "pen_flip": bool(params.get("invert", False)),
                     "is_start": i == 0,
                     "pressure": float(params.get("pressure", 1.0)),
                     "size": float(params.get("radius_px", 50)),
@@ -355,6 +354,13 @@ def sculpt_stroke(params: dict[str, Any]):
             )
         if not stroke:
             raise ValueError("No stroke points are visible in the viewport")
+        # Stroke element keys differ between versions (pen_flip was removed); keep only
+        # the ones this Blender's OperatorStrokeElement defines.
+        valid = {p.identifier for p in bpy.types.OperatorStrokeElement.bl_rna.properties}
+        if "pen_flip" in valid:
+            for el in stroke:
+                el["pen_flip"] = bool(params.get("invert", False))
+        stroke = [{k: v for k, v in el.items() if k in valid} for el in stroke]
         with bpy.context.temp_override(**override):
             if params.get("brush"):
                 set_sculpt_brush({"brush": params["brush"]})

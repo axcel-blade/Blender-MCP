@@ -28,6 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Each successful addon command that changes the scene pushes its own undo step (`MCP: <command>`). The addon keeps a log of the last 500 commands for `get_execution_history`.
 - The core profile is unchanged. All new tools are in the full profile only.
 
+### Fixed
+
+- Objects created into a named collection could end up invisible: when a collection with that name already existed only in another scene, it was reused without being linked into the active scene. Tools now use (or create, e.g. `Castle.001`) a collection that belongs to the active scene, and never pull in another scene's contents.
+- `sculpt_stroke` failed on Blender 5.x because stroke elements no longer accept `pen_flip`. Stroke keys are now matched to the running Blender's API.
+- `get_undo_history` returned an empty list on Blender 5.x. It now reads `WindowManager.undo_stack`.
+
 ## [1.5.0] - 2026-11-21
 
 ### Added

@@ -412,11 +412,17 @@ def redo(params: dict[str, Any]):
 def get_undo_history(params: dict[str, Any]):
     import bpy
 
-    override = _window_override()
-    steps = []
-    if override and hasattr(bpy.context.window_manager, "undo_history"):
-        steps = [s.name for s in bpy.context.window_manager.undo_history]
-    return {"undo_steps": steps[-int(params.get("limit") or 30) :]}
+    wm = bpy.context.window_manager
+    steps: list[str] = []
+    active = None
+    stack = getattr(wm, "undo_stack", None)  # Blender 5.x
+    if stack is not None:
+        steps = [getattr(st, "name", str(st)) for st in stack.steps]
+        active = getattr(stack, "active_index", None)
+    elif hasattr(wm, "undo_history"):
+        steps = [st.name for st in wm.undo_history]
+    limit = int(params.get("limit") or 30)
+    return {"undo_steps": steps[-limit:], "active_index": active, "total": len(steps)}
 
 
 @command("get_execution_history")
