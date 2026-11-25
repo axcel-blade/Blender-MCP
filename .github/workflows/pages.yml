@@ -22,12 +22,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Build Astro & Deploy
+  build:
+    name: Build Astro
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     defaults:
       run:
         working-directory: site
@@ -58,10 +55,20 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: site/dist
 
+  # Separate job: deploy-pages in the same job as the upload can query the
+  # artifact API before the upload is visible ("No artifacts named github-pages").
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
