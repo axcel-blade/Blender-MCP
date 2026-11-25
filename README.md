@@ -34,24 +34,28 @@ This project is **not** affiliated with the Blender Foundation.
 
 Install site (Astro / GitHub Pages): [axcel-blade.github.io/Blender-MCP](https://axcel-blade.github.io/Blender-MCP/)
 
-**Windows (PowerShell)** — one liner:
+**Windows (PowerShell):** press **Win+R**, type `powershell` and press **Enter** (no admin needed). Paste the command below with a right-click or **Ctrl+V**, then press **Enter**:
 
 ```powershell
 irm https://axcel-blade.github.io/Blender-MCP/install.ps1 | iex
 ```
 
-**macOS / Linux:**
+**macOS / Linux:** open **Terminal** (macOS: **Cmd+Space**, type Terminal; Linux: **Ctrl+Alt+T**). Paste the command below (**Cmd+V** on macOS, **Ctrl+Shift+V** on Linux), then press **Enter**:
 
 ```bash
 curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh | sh
 ```
 
-Or from a local clone with uv:
+Or install manually from a clone with uv (needs uv, Git and Blender 3.6+; use uv, not pip):
 
 ```powershell
+git clone https://github.com/axcel-blade/Blender-MCP.git
+cd Blender-MCP
 uv sync
 uv run blender-mcp install-addon
 ```
+
+Manual installs don't configure your AI client; see [Manual client config](#manual-client-config) below. Full steps, including installing the add-on from a release zip, are in [docs/INSTALLATION.md](docs/INSTALLATION.md#manual-install).
 
 1. Blender → **Edit → Preferences → Add-ons** → enable **Blender MCP**
 2. 3D Viewport → press **N** → **Blender MCP** → **Start**

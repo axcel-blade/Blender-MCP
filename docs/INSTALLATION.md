@@ -12,13 +12,13 @@ Do **not** use `pip install` for this project. Use `uv sync` / `uv run`.
 
 Site: [https://axcel-blade.github.io/Blender-MCP/](https://axcel-blade.github.io/Blender-MCP/)
 
-**Windows (PowerShell):**
+**Windows (PowerShell):** press **Win+R**, type `powershell` and press **Enter** (no admin needed). Paste the command below with a right-click or **Ctrl+V**, then press **Enter**:
 
 ```powershell
 irm https://axcel-blade.github.io/Blender-MCP/install.ps1 | iex
 ```
 
-**macOS / Linux:**
+**macOS / Linux:** open **Terminal** (macOS: **Cmd+Space**, type Terminal; Linux: **Ctrl+Alt+T**). Paste the command below (**Cmd+V** on macOS, **Ctrl+Shift+V** on Linux), then press **Enter**:
 
 ```bash
 curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh | sh
@@ -43,17 +43,12 @@ A client is configured only if its folder or CLI exists; missing config files ar
 
 ## Local clone install
 
+Run the installer from a clone. Like the one-line install, it also configures your AI clients.
+
 ### Windows
 
 ```powershell
 .\installers\windows\install.ps1
-```
-
-Manual:
-
-```powershell
-uv sync
-uv run blender-mcp install-addon
 ```
 
 ### Linux / macOS
@@ -63,22 +58,31 @@ chmod +x installers/linux/install.sh installers/macos/install.sh
 ./installers/linux/install.sh   # or macos
 ```
 
-Manual:
+## Manual install
 
-```bash
-uv sync
-uv run blender-mcp install-addon
-```
+Use this if you'd rather not run an installer script. You need uv, Git and Blender 3.6+ (see [Prerequisites](#prerequisites)).
 
-## Manual addon install
+1. Clone the repository and install dependencies:
 
-Download `blender_mcp_addon-*.zip` from the [latest GitHub Release](https://github.com/axcel-blade/Blender-MCP/releases/latest), or pack from a clone:
+   ```bash
+   git clone https://github.com/axcel-blade/Blender-MCP.git
+   cd Blender-MCP
+   uv sync
+   ```
 
-```bash
-uv run blender-mcp pack-addon -o blender_mcp_addon.zip
-```
+2. Install the Blender add-on:
 
-In Blender: **Edit → Preferences → Add-ons → Install…** and select the zip, then enable **Blender MCP**.
+   ```bash
+   uv run blender-mcp install-addon
+   ```
+
+   Or install it from a zip: download `blender_mcp_addon-*.zip` from the [latest GitHub Release](https://github.com/axcel-blade/Blender-MCP/releases/latest), or pack one from your clone with `uv run blender-mcp pack-addon -o blender_mcp_addon.zip`. Then in Blender go to **Edit → Preferences → Add-ons → Install…** and select the zip.
+
+3. Configure your MCP client (see [MCP clients](#mcp-clients)). A manual install doesn't do this for you.
+
+4. In Blender, enable **Blender MCP** under **Edit → Preferences → Add-ons**, then in the 3D Viewport press **N** → **Blender MCP** → **Start**.
+
+5. Fully quit and reopen your MCP client.
 
 ## MCP clients
 
@@ -88,7 +92,7 @@ Configure a `blender` server entry that runs:
 uv run --directory /path/to/Blender-MCP blender-mcp
 ```
 
-Fully quit and reopen the client after editing MCP config.
+Replace `/path/to/Blender-MCP` with the full path to your clone. Fully quit and reopen the client after editing MCP config.
 
 ## Enabling GitHub Pages (maintainers)
 
