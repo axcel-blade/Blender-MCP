@@ -112,8 +112,9 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
 
     @mcp.tool(name="get_guide")
     async def get_guide(name: str) -> dict[str, Any]:
-        """Read a short how-to guide (bpy, materials, scene, workflows); unknown names list them.
-        ``workflows`` maps creative requests to tool sequences and production rules."""
+        """Read a short how-to guide (bpy, materials, scene, workflows, realism).
+        Unknown names list them. ``workflows`` maps creative requests to tool
+        sequences and production rules; ``realism`` is the photoreal checklist."""
         try:
             return ok({"name": name, "guide": read_guide(name)})
         except ValueError as exc:
