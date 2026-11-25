@@ -1,4 +1,6 @@
 ---
+import pyproject from "../../../pyproject.toml?raw";
+
 interface Props {
   title?: string;
   description?: string;
@@ -13,7 +15,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const repo = "https://github.com/axcel-blade/Blender-MCP";
 const docs = `${repo}/blob/main/docs`;
-const version = "v1.5.0";
+// Single source of truth: the package version in pyproject.toml (bumped by release.yml).
+const version = `v${pyproject.match(/^version\s*=\s*"([^"]+)"/m)?.[1] ?? "dev"}`;
 ---
 
 <!doctype html>

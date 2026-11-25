@@ -31,9 +31,13 @@ const unixCmd = `curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh
       <div class="card">
         <h3>Windows</h3>
         <p>
-          PowerShell. Installs uv, the server and the Blender add-on, and registers it with your
-          AI clients.
+          Installs uv, the server and the Blender add-on, and registers it with your AI clients.
         </p>
+        <ol class="steps">
+          <li>Press <kbd>Win</kbd>+<kbd>R</kbd>, type <strong>powershell</strong> and press <kbd>Enter</kbd> (no admin needed).</li>
+          <li>Click <strong>Copy</strong> below, then paste into PowerShell with a right-click or <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li>
+          <li>Press <kbd>Enter</kbd> and wait for it to finish.</li>
+        </ol>
         <div class="cmd">
           <code>{winCmd}</code>
           <button class="copy" type="button" data-copy={winCmd}>Copy</button>
@@ -42,9 +46,13 @@ const unixCmd = `curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh
       <div class="card">
         <h3>macOS / Linux</h3>
         <p>
-          Terminal. Installs uv, the server and the Blender add-on, and registers it with your AI
-          clients.
+          Installs uv, the server and the Blender add-on, and registers it with your AI clients.
         </p>
+        <ol class="steps">
+          <li>Open <strong>Terminal</strong>. On macOS press <kbd>Cmd</kbd>+<kbd>Space</kbd> and type Terminal; on Linux press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd>.</li>
+          <li>Click <strong>Copy</strong> below, then paste into Terminal (<kbd>Cmd</kbd>+<kbd>V</kbd> on macOS, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> on Linux).</li>
+          <li>Press <kbd>Enter</kbd> and wait for it to finish.</li>
+        </ol>
         <div class="cmd">
           <code>{unixCmd}</code>
           <button class="copy" type="button" data-copy={unixCmd}>Copy</button>
@@ -64,6 +72,22 @@ const unixCmd = `curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh
         <li>3D Viewport → press <kbd>N</kbd> → <strong>Blender MCP</strong> → Start.</li>
         <li>Fully quit and reopen your MCP client.</li>
       </ol>
+    </div>
+    <div class="card" style="margin-top: 14px;">
+      <h3>Manual install</h3>
+      <p>Needs <a href="https://docs.astral.sh/uv/">uv</a>, Git and Blender 3.6+ (4.x recommended). Use uv, not pip.</p>
+      <ol class="steps">
+        <li>Clone the repo: <code>git clone {repo}.git</code>, then <code>cd Blender-MCP</code>.</li>
+        <li>Install dependencies: <code>uv sync</code>.</li>
+        <li>Install the add-on into Blender: <code>uv run blender-mcp install-addon</code>.
+          Or download <code>blender_mcp_addon-*.zip</code> from the
+          <a href={`${repo}/releases/latest`}>latest release</a> and use
+          Edit → Preferences → Add-ons → Install….</li>
+        <li>Add a <code>blender</code> server to your MCP client that runs
+          <code>uv run --directory /path/to/Blender-MCP blender-mcp</code>.</li>
+        <li>Then follow the <strong>After install</strong> steps above.</li>
+      </ol>
+      <p class="note">Full guide: <a href={`${docs}/INSTALLATION.md#manual-install`}>manual install</a>.</p>
     </div>
   </section>
 
@@ -106,7 +130,7 @@ const unixCmd = `curl -LsSf https://axcel-blade.github.io/Blender-MCP/install.sh
     <ol class="flow">
       <li>You describe what you want to your assistant.</li>
       <li>The server picks the tools and sends commands over a local bridge.</li>
-      <li>The Blender add-on builds it with the bpy API on Blender's main thread.</li>
+      <li>The Blender add-on runs those commands with the bpy API on Blender's main thread.</li>
       <li>The assistant looks at the viewport or a render and refines.</li>
     </ol>
     <p class="note">
