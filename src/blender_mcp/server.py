@@ -56,7 +56,11 @@ Assets: search_assets, then import_external_asset (Poly Haven, Sketchfab, Poly P
 generate_3d makes ONE new textured model from text or an image (1-3 min, may cost a
 credit), never a whole scene or the ground. Imported and generated models arrive at
 arbitrary scale: read their world bounding box, scale them, and set them on the ground.
-More reference: get_guide (bpy, materials, scene).
+Realism: when the user asks for anything realistic, photoreal or lifelike, read
+get_guide("realism") first. Never deliver plain primitives with flat colors: use scanned
+assets, beveled geometry, PBR textures with roughness/normal detail, an HDRI or physical sky,
+area lights, Cycles, AgX and a real-lens camera, then check in rendered mode.
+More reference: get_guide (bpy, materials, scene, workflows, realism).
 """.strip()
 
 
