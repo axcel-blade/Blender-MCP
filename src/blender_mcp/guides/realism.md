@@ -54,6 +54,36 @@ comes from six things; skip none of them.
 - Compose (rule of thirds), and add subtle compositor touches: slight vignette, glare/bloom on
   bright highlights only.
 
+## 7. Environments and landscapes
+
+- Terrain is a displaced heightfield, never a flat plane: hills, a plateau for buildings,
+  plus a Displace modifier (clouds/voronoi) so cliffs break up. Round its outline or hide
+  its edge out of frame.
+- Blend materials by slope: Geometry Normal Z through a color ramp mixes rock on steep
+  faces with grass on flat ones. Add a noise to the factor so the border isn't a clean line.
+- Break every silhouette: scatter displaced boulders on cliffs and slopes.
+- Vegetation decides whether a landscape reads as real. Prefer real tree/bush models
+  (Poly Haven, Sketchfab, `generate_3d`) over sphere blobs, which read as a toy. Scatter
+  hundreds of linked duplicates by ray-casting onto the evaluated terrain, skipping steep
+  normals, with random rotation, scale and species. Keep greens dark and desaturated.
+- Architecture needs detail at several scales: corbels and merlons under roofs, window
+  frames, finials, steep roofs with overhang. Plain boxes read as blockouts.
+- Light from the side, low and warm (4000-4600 K), so walls and rocks get raking shadows.
+
+## Pitfalls seen in real builds
+
+- `bpy.ops.object.transform_apply()` applies location too by default, moving every origin
+  to the world origin. Pass `location=False, rotation=False` when you only mean scale, or
+  measure positions from `bound_box` centers.
+- Image textures on primitives you modeled stretch or blur unless mapped: use Object
+  coordinates into a Mapping node at real-world scale, and set image nodes to Box projection.
+- Check a texture asset by rendering it: names lie (a "rock wall" may be brick).
+- Boolean cutters: hide them in render and viewport, and never delete them.
+- `film_transparent = True` hides the sky but keeps its lighting; use it when the user wants
+  only the models.
+- `look` in a viewport is not a final render. For realism checks, render with Cycles to a file
+  and inspect that image.
+
 ## Verify
 
 `look` in rendered mode from the camera. Compare against a real photo of the subject in your
