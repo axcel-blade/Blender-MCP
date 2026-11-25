@@ -12,32 +12,51 @@ def register_prompts(mcp: FastMCP) -> None:
     @mcp.prompt()
     def create_product_model(description: str) -> str:
         return (
-            f"Create a realistic product model for: {description}\\n"
-            "1) Inspect the scene and create a dedicated collection.\\n"
-            "2) Block out major forms with named objects.\\n"
-            "3) Add details, materials, studio lighting, and a camera.\\n"
-            "4) Capture viewport screenshots, fix issues, then report."
+            f"Create a realistic product model for: {description}\n"
+            "Read get_guide('realism') first and follow it.\n"
+            "1) Inspect the scene and create a dedicated collection.\n"
+            "2) Search Poly Haven/Sketchfab for a real model; otherwise model it at real "
+            "scale with bevels and subdivision.\n"
+            "3) PBR materials with roughness and normal detail, HDRI plus area-light studio "
+            "lighting, Cycles, AgX, an 85-100 mm camera with depth of field.\n"
+            "4) Look in rendered mode, fix the least realistic thing, repeat, then report."
         )
 
     @mcp.prompt()
     def create_environment(description: str) -> str:
         return (
-            f"Create a detailed environment: {description}\\n"
+            f"Create a detailed environment: {description}\n"
+            "Unless a stylized look is requested, aim for realism: read get_guide('realism'), "
+            "prefer scanned assets and PBR textures, HDRI/physical sky, Cycles and AgX. "
             "Build geometry, materials, lighting, and camera. Organize into "
             "Environment/Props/Lighting/Cameras collections. Verify visually."
         )
 
     @mcp.prompt()
+    def create_realistic_scene(description: str) -> str:
+        return (
+            f"Create a photorealistic scene: {description}\n"
+            "Read get_guide('realism') and follow every section.\n"
+            "1) Inspect the scene; work in a new collection at real-world scale.\n"
+            "2) Import scanned assets, HDRIs and PBR textures (search_assets) before modeling "
+            "anything from primitives; bevel every hard edge you model.\n"
+            "3) No flat colors: textures or procedural materials with roughness and bump.\n"
+            "4) HDRI or physical sky + area key light, Cycles with denoising, AgX.\n"
+            "5) Camera at eye height, 35-50 mm, depth of field.\n"
+            "6) look in rendered mode, fix the least realistic thing, look again, then report."
+        )
+
+    @mcp.prompt()
     def create_low_poly_scene(description: str) -> str:
         return (
-            f"Create a stylized low-poly scene: {description}\\n"
+            f"Create a stylized low-poly scene: {description}\n"
             "Prefer simple primitives, flat colors, limited polycounts, and clear silhouettes."
         )
 
     @mcp.prompt()
     def create_character(description: str) -> str:
         return (
-            f"Create a character blockout: {description}\\n"
+            f"Create a character blockout: {description}\n"
             "Use proportional primitives, meaningful names, and a Characters collection."
         )
 

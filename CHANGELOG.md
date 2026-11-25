@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-25
+
+### Added
+
+- `get_guide("realism")`: a checklist for photoreal results covering real assets, beveled geometry, PBR materials at real-world scale, HDRI and area lighting, Cycles and AgX, a real-lens camera, environments and landscapes (slope-blended terrain, boulders, scattered vegetation), and pitfalls seen in real builds.
+- `create_realistic_scene` prompt for photoreal scenes.
+
+### Changed
+
+- The server instructions tell the AI to read the realism guide whenever a request asks for something realistic, and never to deliver plain primitives with flat colors.
+- `create_product_model` and `create_environment` prompts follow the realism guide; `create_environment` aims for realism unless a stylized look is requested.
+
+### Fixed
+
+- MCP prompts contained a literal `\n` instead of line breaks.
+
 ## [1.6.0] - 2026-11-23
 
 ### Added
