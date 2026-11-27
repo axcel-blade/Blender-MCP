@@ -87,4 +87,4 @@ In the full profile, `get_viewport_screenshot`, `capture_camera_view` and the re
 
 ## Guides and prompts
 
-`get_guide(name)` serves `bpy`, `materials`, `scene`, `workflows`, `realism` (photoreal checklist) and `cinematic` (stylised scenes from a reference). The `recreate_reference` prompt runs the staged cinematic workflow.
+`get_guide(name)` serves `bpy`, `materials`, `scene`, `workflows`, `realism` (photoreal checklist), `cinematic` (stylised scenes from a reference), `animation_3d` (keyframe animation), `animation_2d` (Grease Pencil), `game_assets` (engine-ready exports), `modelling` (hard surface and sculpting), `rigging` (armatures and skinning), `rendering_compositing`, `vfx_simulation`, `motion_tracking`, `video_editing`, `geometry_nodes`, `archviz_product`, `3d_printing`, `motion_graphics`, `xr_assets` and `scientific_viz`; `materials` also covers UVs, texture painting and baking, and `bpy` covers batch work and safe execution mode. The server instructions tell the model to load only the guide that fits the request. The `recreate_reference` prompt runs the staged cinematic workflow.

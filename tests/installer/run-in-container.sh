@@ -48,7 +48,7 @@ mkdir -p \
   "$HOME/.config/blender/4.2/scripts/addons" \
   "$HOME/.cursor" \
   "$HOME/.codeium/windsurf" \
-  "$HOME/.gemini" \
+  "$HOME/.gemini/antigravity" \
   "$HOME/.codex" \
   "$HOME/.config/Claude" \
   "$HOME/.config/Code/User/globalStorage/saoudrizwan.claude-dev/settings"
@@ -76,6 +76,7 @@ files = {
     ".cursor/mcp.json": "mcpServers",
     ".codeium/windsurf/mcp_config.json": "mcpServers",
     ".gemini/settings.json": "mcpServers",
+    ".gemini/config/mcp_config.json": "mcpServers",
     ".config/Claude/claude_desktop_config.json": "mcpServers",
     ".config/Code/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json": "mcpServers",
 }
@@ -89,6 +90,9 @@ for rel, key in files.items():
         continue
     if entry.get("command") != "uv" or entry.get("args") != expected:
         bad.append(f"{rel}: wrong entry {entry}")
+ag = json.load(open(os.path.join(home, ".gemini/config/mcp_config.json")))["mcpServers"]["blender-mcp"]
+if ag.get("timeoutSeconds") != 3600:
+    bad.append(f".gemini/config/mcp_config.json: expected timeoutSeconds 3600, got {ag.get('timeoutSeconds')}")
 if "other" not in json.load(open(os.path.join(home, ".cursor/mcp.json")))["mcpServers"]:
     bad.append(".cursor/mcp.json: existing 'other' server was lost")
 toml = open(os.path.join(home, ".codex/config.toml")).read()

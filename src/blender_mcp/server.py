@@ -66,7 +66,20 @@ materials, sky and lighting, compositing. After each stage run look(mode="render
 render with the compositor applied), compare it with the reference, list the three biggest
 differences, fix them, then stop and wait for the user's feedback before the next stage.
 The recreate_reference prompt spells this out.
-More reference: get_guide (bpy, materials, scene, workflows, realism, cinematic).
+Guides: read only the one that matches the request, when you start that kind of work:
+realism (photoreal), cinematic (stylised / from a reference), animation_3d (keyframes,
+cameras, loops), animation_2d (Grease Pencil, Line Art), game_assets (Unity/Unreal/Godot/web
+exports, LODs, baking), modelling (hard surface, sculpting, remeshing), rigging (armatures,
+weights, IK), rendering_compositing (engines, samples, passes, output, compositor),
+vfx_simulation (rigid body, cloth, fluids, particles), motion_tracking (camera solve from
+footage), video_editing (sequencer cuts, titles, transitions), geometry_nodes (scatter,
+parametric setups, modifier inputs), archviz_product (interiors, exteriors, packshots),
+3d_printing (manifold checks, mm export), motion_graphics (titles, logos, kinetic type),
+xr_assets (AR/VR/web: USDZ, GLB, Draco), scientific_viz (data, point clouds, colour maps),
+materials (shaders, UVs, texture painting, baking), bpy (batch scripts, what safe
+execution mode refuses).
+General:
+scene, workflows. get_guide with an unknown name lists them all.
 """.strip()
 
 

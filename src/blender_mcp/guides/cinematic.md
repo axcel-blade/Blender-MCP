@@ -6,8 +6,21 @@ shapes, values and mood, not physical accuracy: big readable silhouettes, depth 
 light and a graded image.
 
 This repo supports Blender 3.6 to 5.x and several APIs changed in that range (marked below).
-Check anything you are unsure of with `lookup_api` before scripting: it reads the user's
-own Blender.
+The compositor, Glare, Principled and Sky details were tested on Blender 5.3; the 3.6 and
+4.x notes come from the API changes and are untested. Check anything you are unsure of
+with `lookup_api` before scripting: it reads the user's own Blender.
+
+## When to use
+
+Stylised environments, key art, concept-art recreations, "epic" or moody stills and short
+shots. Not for photoreal product or archviz work (`realism`).
+
+## Inputs needed
+
+- The reference image (or a clear description), and what must match: layout only, or
+  palette and mood too.
+- Aspect ratio and output size; still or a short camera move.
+- Hero objects that need assets or `generate_3d`, and whether credits may be spent.
 
 Work in stages (see `recreate_reference` prompt): blockout, main structures, detail,
 materials, sky and lighting, compositing. After each stage run `look(mode="render")`,
@@ -147,3 +160,57 @@ The compositor API changed in 5.0:
   The engine enum under-reports: assign inside try/except TypeError.
 - Keep `look(mode="render", max_size=512)` for stage checks; raise samples only for the
   final. Render limits in the server config cap samples and resolution.
+
+## Tested code: compositor with glare [5.3]
+
+```python
+sc = bpy.context.scene
+if "compositing_node_group" in bpy.types.Scene.bl_rna.properties:   # 5.x
+    tree = bpy.data.node_groups.new("Comp", "CompositorNodeTree")
+    tree.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+    rl = tree.nodes.new("CompositorNodeRLayers"); out = tree.nodes.new("NodeGroupOutput")
+    sc.compositing_node_group = tree
+    out_socket = out.inputs[0]
+else:                                                                # 3.6-4.x [untested]
+    sc.use_nodes = True; tree = sc.node_tree
+    rl = next(n for n in tree.nodes if n.type == "R_LAYERS")
+    out_socket = next(n for n in tree.nodes if n.type == "COMPOSITE").inputs[0]
+glare = tree.nodes.new("CompositorNodeGlare")
+if "Type" in glare.inputs:                                           # 5.x
+    glare.inputs["Type"].default_value = "Fog Glow"
+    glare.inputs["Threshold"].default_value = 0.8
+else:                                                                # [untested]
+    glare.glare_type = "FOG_GLOW"; glare.threshold = 0.8
+tree.links.new(rl.outputs["Image"], glare.inputs["Image"])
+tree.links.new(glare.outputs["Image"], out_socket)
+```
+
+Only replace the user's compositor with their agreement; otherwise insert nodes into it.
+
+## Common mistakes
+
+- Matching details before the layout: a wrong focal length or horizon can't be fixed later
+  by materials. Lock the camera in the blockout stage.
+- Everything at one depth: no foreground framing, no fog between layers, so it reads flat.
+- Fog density too high (everything grey) or a fog cube that doesn't enclose the camera
+  path. Start low, raise slowly, render to check.
+- Glare threshold too low: the whole frame blooms. Only emissives and the sun should glow.
+- Judging glare, fog or grading in viewport modes: they show only in `look(mode="render")`.
+- Too many hues: pick a palette of 2-3 hues from the reference and grade towards it.
+
+## Verification checklist
+
+- [ ] Camera aspect, horizon height and focal length match the reference (side by side).
+- [ ] Big shapes and depth layers read in a small, blurred render (`max_size=256`).
+- [ ] Value structure matches: darkest and brightest areas in the same places.
+- [ ] Palette and mood match after grading; highlights glow, the rest does not.
+- [ ] Render time is acceptable for the user's machine; samples within limits.
+- [ ] After each stage the three biggest differences were listed and the user was asked.
+
+## Manual work and external tools
+
+- Overpaint in Krita or Photoshop is often the fastest final 10 % for key art.
+- Hero creatures and characters: `generate_3d`, Sketchfab or a sculpt by hand.
+- Add-ons for scattering or skies must be installed and enabled by the user: safe execution
+  mode refuses enabling add-ons, registering classes and adding event handlers. Explain
+  this to the user and never try to bypass it.

@@ -112,10 +112,20 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
 
     @mcp.tool(name="get_guide")
     async def get_guide(name: str) -> dict[str, Any]:
-        """Read a short how-to guide (bpy, materials, scene, workflows, realism, cinematic).
-        Unknown names list them. ``workflows`` maps creative requests to tool
-        sequences and production rules; ``realism`` is the photoreal checklist;
-        ``cinematic`` covers stylised/concept-art scenes built from a reference image."""
+        """Read one how-to guide; load only the one that fits the task.
+        realism: photoreal checklist. cinematic: stylised scenes from a reference.
+        animation_3d: keyframes, timing, F-Curves, NLA. game_assets: engine-ready
+        exports, UVs, baking, LODs. animation_2d: Grease Pencil and Line Art.
+        modelling: hard surface and sculpting. rigging: armatures, weights, IK.
+        rendering_compositing: engines, passes, output, compositor.
+        vfx_simulation: physics and caches. motion_tracking: camera solves.
+        video_editing: sequencer. geometry_nodes: procedural setups.
+        archviz_product: interiors, exteriors and product shots.
+        3d_printing: printable meshes. motion_graphics: titles and logos.
+        xr_assets: AR/VR/web exports. scientific_viz: data visualisation.
+        materials: shaders, UVs, painting, baking. bpy: batch scripts, safe mode.
+        scene, workflows: general.
+        Unknown names list every guide."""
         try:
             return ok({"name": name, "guide": read_guide(name)})
         except ValueError as exc:

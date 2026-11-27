@@ -353,3 +353,167 @@ def test_render_look_uses_samples_of_active_engine(addon):
     addon.bpy.scene.eevee.taa_render_samples = 24
     result = addon.screenshots.capture_render_view({"camera": "Cam2", "max_samples": 32})
     assert result["samples"] == 24
+
+
+TEMPLATE_GUIDES = (
+    "cinematic",
+    "animation_3d",
+    "game_assets",
+    "modelling",
+    "rigging",
+    "animation_2d",
+    "rendering_compositing",
+    "vfx_simulation",
+    "motion_tracking",
+    "video_editing",
+    "geometry_nodes",
+    "archviz_product",
+    "3d_printing",
+    "motion_graphics",
+    "xr_assets",
+    "scientific_viz",
+    "materials",
+    "bpy",
+)
+TEMPLATE_SECTIONS = (
+    "## When to use",
+    "## Inputs needed",
+    "## Common mistakes",
+    "## Verification checklist",
+    "## Manual work and external tools",
+)
+
+
+@pytest.mark.parametrize("name", TEMPLATE_GUIDES)
+def test_guides_follow_template_and_are_routed(name):
+    assert name in list_guides()
+    text = read_guide(name)
+    for section in TEMPLATE_SECTIONS:
+        assert section in text, (name, section)
+    assert "Tested" in text and "untested" in text  # version status is marked
+    assert "safe execution mode" in " ".join(text.lower().split())
+    assert "```python" in text
+    assert name in INSTRUCTIONS
+
+
+def test_animation_guide_uses_5x_channelbag_api():
+    text = read_guide("animation_3d")
+    assert "action_get_channelbag_for_slot" in text
+    assert "action.fcurves" in text  # explains the removal / fallback
+
+
+def test_game_assets_guide_covers_exports():
+    text = read_guide("game_assets")
+    for item in ("export_scene.gltf", "export_scene.fbx", "LOD", "UCX_", "use_selected_to_active"):
+        assert item in text
+
+
+def test_batch_two_guides_use_current_apis():
+    assert "arm.collections.new" in read_guide("rigging")
+    gp = read_guide("animation_2d")
+    assert "GREASEPENCIL" in gp and "add_strokes" in gp and "GPENCIL" in gp
+    assert "voxel_remesh" in read_guide("modelling")
+
+
+def test_batch_three_guides_use_current_apis():
+    render = read_guide("rendering_compositing")
+    assert 'media_type = "VIDEO"' in render and "ShaderNodeMix" in render
+    assert "rigidbody.object_add" in read_guide("vfx_simulation")
+    tracking = read_guide("motion_tracking")
+    assert "area.ui_type = old" in tracking and "clean_tracks" in tracking
+
+
+def test_batch_four_guides_use_current_apis():
+    video = read_guide("video_editing")
+    assert "strips.new_effect" in video and "length=" in video
+    gn = read_guide("geometry_nodes")
+    assert "props.inputs" in gn and "interface.new_socket" in gn
+    assert "is_portal" in read_guide("archviz_product")
+
+
+def test_batch_five_guides_use_current_apis():
+    printing = read_guide("3d_printing")
+    assert "wm.stl_export" in printing and "global_scale=1000" in printing
+    assert "ensure_lookup_table" in printing
+    assert "bevel_factor_end" in read_guide("motion_graphics")
+    xr = read_guide("xr_assets")
+    assert "usd_export" in xr and "export_draco_mesh_compression_enable" in xr
+
+
+def test_last_batch_guides():
+    sci = read_guide("scientific_viz")
+    assert "pointclouds.new" in sci and "foreach_set" in sci
+    mats = read_guide("materials")
+    assert "object.bake" in mats and "smart_project" in mats and "Non-Color" in mats
+    bpy_guide = " ".join(read_guide("bpy").split())
+    for refused in ("register_class", "bpy.app.handlers", "addon_utils", "subprocess"):
+        assert refused in bpy_guide
+    assert "never try to get around the mode" in bpy_guide.lower()
+
+
+def test_every_guide_is_named_in_instructions():
+    for name in list_guides():
+        assert name in INSTRUCTIONS, name
+
+
+# --------------------------------------------------------------- track_camera_motion area
+
+
+class FakeArea:
+    def __init__(self, ui_type, size, clip=None):
+        self.ui_type = ui_type
+        self.width = self.height = size
+        self.spaces = NS(active=NS(clip=clip))
+        self.regions = [NS(type="HEADER"), NS(type="WINDOW")]
+
+    @property
+    def type(self):
+        return "CLIP_EDITOR" if self.ui_type == "CLIP_EDITOR" else self.ui_type
+
+    @type.setter
+    def type(self, value):
+        self.ui_type = value
+
+
+@pytest.fixture
+def library(addon, monkeypatch):
+    handlers = sys.modules["blender_addon.handlers"]
+    handlers.dispatch = lambda *a, **k: None
+    handlers.history = lambda: []
+    spec = importlib.util.spec_from_file_location(
+        "blender_addon.handlers.library", ROOT / "blender_addon/handlers/library.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, "blender_addon.handlers.library", mod)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _windows(bpy, *areas):
+    bpy.context.window_manager = NS(windows=[NS(screen=NS(areas=list(areas)))])
+
+
+def test_clip_override_restores_borrowed_area(addon, library):
+    view3d = FakeArea("VIEW_3D", 800)
+    _windows(addon.bpy, FakeArea("OUTLINER", 200), view3d)
+    with library._clip_override("clip") as override:
+        assert override["area"] is view3d and view3d.type == "CLIP_EDITOR"
+    assert view3d.ui_type == "VIEW_3D"
+
+
+def test_clip_override_restores_area_when_tracking_fails(addon, library):
+    view3d = FakeArea("VIEW_3D", 800)
+    _windows(addon.bpy, view3d)
+    with pytest.raises(RuntimeError), library._clip_override("clip"):
+        raise RuntimeError("solve failed")
+    assert view3d.ui_type == "VIEW_3D"
+
+
+def test_clip_override_reuses_open_clip_editor_and_restores_its_clip(addon, library):
+    editor = FakeArea("CLIP_EDITOR", 300, clip="user_clip")
+    view3d = FakeArea("VIEW_3D", 800)
+    _windows(addon.bpy, view3d, editor)
+    with library._clip_override("new_clip") as override:
+        assert override["area"] is editor and editor.spaces.active.clip == "new_clip"
+    assert editor.spaces.active.clip == "user_clip"
+    assert view3d.ui_type == "VIEW_3D"

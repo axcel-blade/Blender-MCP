@@ -10,7 +10,7 @@
 [![MCP](https://img.shields.io/badge/protocol-MCP-555)](docs/ARCHITECTURE.md)
 [![Local only](https://img.shields.io/badge/bridge-localhost%20default-555)](SECURITY.md)
 
-Production-oriented **Model Context Protocol (MCP)** integration for Blender. AI clients (Claude Desktop, Cursor, VS Code, Codex, Windsurf, and others) can inspect scenes, model, shade, light, render, and visually verify work through a local bridge.
+Production-oriented **Model Context Protocol (MCP)** integration for Blender. AI clients (Claude Desktop, Cursor, VS Code, Codex, Windsurf, Google Antigravity, and others) can inspect scenes, model, shade, light, render, and visually verify work through a local bridge.
 
 This project is **not** affiliated with the Blender Foundation.
 
@@ -68,7 +68,7 @@ The one-line and local-clone installers register `blender-mcp`, with the real in
 - Claude Desktop, Claude Code
 - Cursor, Windsurf
 - VS Code / VS Code Insiders (Copilot), Cline, Roo Code
-- Gemini CLI, Codex
+- Gemini CLI, Google Antigravity, Codex
 
 A client is set up only if it's installed. Existing configs are backed up to `*.blender-mcp.bak` and your other servers are kept. Re-running the installer is safe. Paths per OS are in [docs/INSTALLATION.md](docs/INSTALLATION.md).
 

@@ -142,6 +142,14 @@ function Register-McpClients([string]$RepoRoot) {
     }
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".codeium\windsurf\mcp_config.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:USERPROFILE ".gemini\settings.json") "mcpServers" $std
+    # Google Antigravity (app, IDE and CLI) reads ~/.gemini/config/mcp_config.json. Its default
+    # 180 s per tool call is shorter than long renders and bakes, so allow up to an hour.
+    $agHome = Join-Path $env:USERPROFILE ".gemini"
+    if ((Test-Path (Join-Path $agHome "antigravity")) -or (Test-Path (Join-Path $agHome "config"))) {
+        [void](New-Item -ItemType Directory -Force (Join-Path $agHome "config"))
+        $ag = [pscustomobject]@{ command = "uv"; args = $mcpArgs; timeoutSeconds = 3600 }
+        Set-JsonMcpServer (Join-Path $agHome "config\mcp_config.json") "mcpServers" $ag
+    }
     Set-JsonMcpServer (Join-Path $env:APPDATA "Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json") "mcpServers" $std
     Set-JsonMcpServer (Join-Path $env:APPDATA "Code\User\globalStorage\rooveterinaryinc.roo-cline\settings\mcp_settings.json") "mcpServers" $std
 
