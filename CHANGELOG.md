@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `look(mode="render")`: a real render from the active or named camera with the compositor applied, so glare, colour grading, fog and volumes can be checked visually from the core profile. It honours `max_size`, the render sample/resolution limits, the `screenshots` and `rendering` tool groups and `render.max_time_seconds` (or `command_timeouts.capture_render_view`) as the client and addon timeout, restores every setting it changes, and errors clearly when there is no camera or the render fails.
+- `get_guide("cinematic")`: stylised and concept-art scenes from a reference image: matching the camera, Bezier tracks and bridges, displaced cliffs and floating islands, storm skies, volumetric fog, lightning, emissive and wet materials, rain, compositor glare and grading, with notes on API differences between Blender 3.6, 4.x and 5.x.
+- `recreate_reference` prompt: a six-stage workflow (blockout, main structures, detail, materials, sky and lighting, compositing) that renders, compares with the reference, fixes the three biggest differences and waits for feedback after each stage.
+
+### Changed
+
+- Server instructions send stylised/cinematic requests to the cinematic guide and its staged workflow; photoreal requests still go to the realism guide.
+
+### Fixed
+
+- Render handlers could return an image left over from an earlier render (for example with `write_still=False`, or when the render wrote nothing). They now return only this render's image, or an error.
+- Render handlers now restore the output path, samples, engine, resolution percentage and file format afterwards, even when the render fails.
+- `capture_camera_view` with a `camera` no longer leaves that camera as the scene's active camera.
+
 ## [1.7.0] - 2026-11-25
 
 ### Added

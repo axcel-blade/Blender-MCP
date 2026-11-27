@@ -70,6 +70,21 @@ Safety conventions:
 
 All tools return structured JSON with `success`, `result` / `error`, and `operation_id` when available.
 
-## Visual verification
+## Visual verification (core profile)
 
-After modeling, call `get_viewport_screenshot` or `capture_camera_view`, inspect the image, fix issues, then confirm completion.
+- **`look(mode="viewport", view=None, camera=None, angles=None, max_size=768, samples=None)`** — returns images the model can see.
+
+| mode | what it captures |
+|------|------------------|
+| `viewport` / `material` / `rendered` / `wireframe` | The 3D viewport with that shading (no compositor) |
+| `camera` | The viewport through the active or named `camera`; the active camera is restored afterwards |
+| `angles` | Several views in one call (`angles`, default FRONT, RIGHT, TOP, PERSPECTIVE) |
+| `render` | A real render from the active or named `camera` with the compositor applied (glare, grading, volumes) |
+
+`mode="render"` needs both the `screenshots` and `rendering` tool groups. It scales the render so its longest edge is at most `max_size` (and the configured `render.max_resolution_*`), caps `samples` (default: the scene's own) at `render.max_samples`, and allows `render.max_time_seconds` to finish (override with `bridge.command_timeouts.capture_render_view`). It restores camera, engine, samples, resolution percentage, compositing, output path and file format, even if the render fails, and never returns an image from an earlier render. With no camera it returns an error saying how to add one.
+
+In the full profile, `get_viewport_screenshot`, `capture_camera_view` and the render tools are also available.
+
+## Guides and prompts
+
+`get_guide(name)` serves `bpy`, `materials`, `scene`, `workflows`, `realism` (photoreal checklist) and `cinematic` (stylised scenes from a reference). The `recreate_reference` prompt runs the staged cinematic workflow.

@@ -47,6 +47,27 @@ def register_prompts(mcp: FastMCP) -> None:
         )
 
     @mcp.prompt()
+    def recreate_reference(description: str = "the attached reference image") -> str:
+        return (
+            f"Recreate this reference as a stylised, cinematic Blender scene: {description}\n"
+            "Read get_guide('cinematic') first (use get_guide('realism') instead only if the "
+            "user wants photorealism). Inspect the scene and work in new named collections.\n"
+            "Work in six stages, in order:\n"
+            "1) Blockout: match the reference camera (aspect, focal length, horizon) and "
+            "block every large mass with primitives.\n"
+            "2) Main structures: terrain, cliffs, islands, tracks and bridges; import or "
+            "generate_3d complex hero objects.\n"
+            "3) Detail: secondary shapes, props, breakup of silhouettes.\n"
+            "4) Materials: stylised, emissive and wet materials.\n"
+            "5) Sky and lighting: sky, fog/volumes, key light, lightning, rain.\n"
+            "6) Compositing: glare, colour grading, vignette.\n"
+            "After EVERY stage: look(mode='render', max_size=512); compare it with the "
+            "reference; list the three biggest differences (composition, value/colour, "
+            "shape); fix them and render again; then show the user the render and the list, "
+            "and wait for their feedback before starting the next stage."
+        )
+
+    @mcp.prompt()
     def create_low_poly_scene(description: str) -> str:
         return (
             f"Create a stylized low-poly scene: {description}\n"

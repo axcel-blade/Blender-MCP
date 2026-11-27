@@ -15,7 +15,7 @@ from blender_mcp.tools.registry import AppContext, apply_tool_profile, register_
 INSTRUCTIONS = """
 Blender MCP drives the user's live Blender. execute_blender_code runs Python there with the
 full bpy API (bpy, mathutils, C=bpy.context, D=bpy.data preloaded), so anything Blender can
-do, you can do. look shows you the result. Use both freely.
+do, you can do. look shows you the result (mode="render" for a real render). Use both freely.
 
 Start: get_addon_status (versions, warnings, libraries, generators), then get_scene_info.
 
@@ -60,7 +60,13 @@ Realism: when the user asks for anything realistic, photoreal or lifelike, read
 get_guide("realism") first. Never deliver plain primitives with flat colors: use scanned
 assets, beveled geometry, PBR textures with roughness/normal detail, an HDRI or physical sky,
 area lights, Cycles, AgX and a real-lens camera, then check in rendered mode.
-More reference: get_guide (bpy, materials, scene, workflows, realism).
+Stylised, cinematic or concept-art requests (often from a reference image): read
+get_guide("cinematic") instead and work in stages: blockout, main structures, detail,
+materials, sky and lighting, compositing. After each stage run look(mode="render") (a real
+render with the compositor applied), compare it with the reference, list the three biggest
+differences, fix them, then stop and wait for the user's feedback before the next stage.
+The recreate_reference prompt spells this out.
+More reference: get_guide (bpy, materials, scene, workflows, realism, cinematic).
 """.strip()
 
 

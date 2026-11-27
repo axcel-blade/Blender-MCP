@@ -93,11 +93,20 @@ By default the server exposes a **core** profile of 16 tools: `get_addon_status`
 `get_scene_info`, `get_object_info`, `search_scene`, `execute_blender_code`, `lookup_api`,
 `look`, `search_assets`, `import_external_asset`, `generate_3d`, `get_generation_status`,
 `get_guide`, `blender_mcp_version`, `open_blender`, `close_blender`, and `blend_file`
-(open, save, rename and manage `.blend` files). Models choose tools more reliably from a short
+(open, save, rename and manage `.blend` files). `look(mode="render")` returns a real render with
+the compositor applied, so the model can check finished looks without leaving the core profile. Models choose tools more reliably from a short
 list, and `execute_blender_code` already covers the whole `bpy` API.
 
 To expose all ~340 specialised wrapper tools (sculpting, rigging, physics, compositing, VSE, Grease Pencil, environments, QC, batch automation, ...) instead, set `BLENDER_MCP_TOOL_PROFILE=full`
 or put `profile = "full"` under `[tools]` in `config.toml`.
+
+## Recreating a reference image
+
+For stylised or cinematic scenes from a reference image, use the `recreate_reference` prompt.
+The model reads `get_guide("cinematic")` and works in six stages (blockout, main structures,
+detail, materials, sky and lighting, compositing). After each stage it renders with
+`look(mode="render")`, lists the three biggest differences from the reference, fixes them and
+waits for your feedback. Photoreal requests use `get_guide("realism")` instead.
 
 ## Documentation
 
