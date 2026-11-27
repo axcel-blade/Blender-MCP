@@ -46,11 +46,12 @@ assets first for anything common (`search_assets`).
 
 ```python
 import bmesh
+
 bm = bmesh.new()
 bmesh.ops.create_cube(bm, size=1.0)
-bmesh.ops.bevel(bm, geom=list(bm.edges), offset=0.05, segments=3,
-                affect="EDGES", profile=0.5)
-bm.to_mesh(mesh); bm.free()
+bmesh.ops.bevel(bm, geom=list(bm.edges), offset=0.05, segments=3, affect="EDGES", profile=0.5)
+bm.to_mesh(mesh)
+bm.free()
 ```
 
 - Voxel remesh [5.3]: `mesh.remesh_voxel_size = 0.01-0.05` (smaller = denser; a 1 m object

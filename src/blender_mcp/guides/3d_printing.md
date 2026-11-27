@@ -36,15 +36,19 @@ figurines, enclosures, replacement parts, miniatures, architectural models.
 ```python
 # [5.3] manifold check and volume with bmesh (works without any add-on)
 import bmesh
-bm = bmesh.new(); bm.from_mesh(ob.evaluated_get(depsgraph).to_mesh())
-bm.faces.ensure_lookup_table()          # needed before indexing bm.faces[...]
+
+bm = bmesh.new()
+bm.from_mesh(ob.evaluated_get(depsgraph).to_mesh())
+bm.faces.ensure_lookup_table()  # needed before indexing bm.faces[...]
 non_manifold = [e.index for e in bm.edges if not e.is_manifold]
-volume_cm3 = bm.calc_volume() * 1e6     # mesh in metres -> cm3
-bm.free(); ob.evaluated_get(depsgraph).to_mesh_clear()
+volume_cm3 = bm.calc_volume() * 1e6  # mesh in metres -> cm3
+bm.free()
+ob.evaluated_get(depsgraph).to_mesh_clear()
 
 # [5.3] export: metres in Blender -> millimetres in the STL
-bpy.ops.wm.stl_export(filepath=path, export_selected_objects=True,
-                      global_scale=1000.0, apply_modifiers=True)
+bpy.ops.wm.stl_export(
+    filepath=path, export_selected_objects=True, global_scale=1000.0, apply_modifiers=True
+)
 ```
 
 - Tested [5.3]: a 0.02 m cube exported this way measured exactly 20 mm in the STL, 12

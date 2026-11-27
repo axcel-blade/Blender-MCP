@@ -37,19 +37,26 @@ ng = bpy.data.node_groups.new("Scatter", "GeometryNodeTree")
 ng.interface.new_socket("Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
 ng.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
 d = ng.interface.new_socket("Density", in_out="INPUT", socket_type="NodeSocketFloat")
-d.default_value = 2.0; d.min_value = 0
+d.default_value = 2.0
+d.min_value = 0
 ng.interface.new_socket("Seed", in_out="INPUT", socket_type="NodeSocketInt")
-gi = ng.nodes.new("NodeGroupInput"); go = ng.nodes.new("NodeGroupOutput")
+gi = ng.nodes.new("NodeGroupInput")
+go = ng.nodes.new("NodeGroupOutput")
 dp = ng.nodes.new("GeometryNodeDistributePointsOnFaces")
 ip = ng.nodes.new("GeometryNodeInstanceOnPoints")
 cone = ng.nodes.new("GeometryNodeMeshCone")
 join = ng.nodes.new("GeometryNodeJoinGeometry")
 L = ng.links.new
-L(gi.outputs["Geometry"], dp.inputs["Mesh"]); L(gi.outputs["Density"], dp.inputs["Density"])
-L(gi.outputs["Seed"], dp.inputs["Seed"]); L(dp.outputs["Points"], ip.inputs["Points"])
-L(cone.outputs["Mesh"], ip.inputs["Instance"]); L(ip.outputs["Instances"], join.inputs["Geometry"])
-L(gi.outputs["Geometry"], join.inputs["Geometry"]); L(join.outputs["Geometry"], go.inputs["Geometry"])
-mod = ob.modifiers.new("Scatter", "NODES"); mod.node_group = ng
+L(gi.outputs["Geometry"], dp.inputs["Mesh"])
+L(gi.outputs["Density"], dp.inputs["Density"])
+L(gi.outputs["Seed"], dp.inputs["Seed"])
+L(dp.outputs["Points"], ip.inputs["Points"])
+L(cone.outputs["Mesh"], ip.inputs["Instance"])
+L(ip.outputs["Instances"], join.inputs["Geometry"])
+L(gi.outputs["Geometry"], join.inputs["Geometry"])
+L(join.outputs["Geometry"], go.inputs["Geometry"])
+mod = ob.modifiers.new("Scatter", "NODES")
+mod.node_group = ng
 ```
 
 Set a modifier input by name. The API changed in 5.x [5.3]: `mod["Socket_2"] = v` raises
@@ -57,12 +64,15 @@ Set a modifier input by name. The API changed in 5.x [5.3]: `mod["Socket_2"] = v
 
 ```python
 def set_input(mod, name, value):
-    item = next(i for i in mod.node_group.interface.items_tree
-                if getattr(i, "in_out", None) == "INPUT" and i.name == name)
+    item = next(
+        i
+        for i in mod.node_group.interface.items_tree
+        if getattr(i, "in_out", None) == "INPUT" and i.name == name
+    )
     props = getattr(mod, "properties", None)
-    if props is not None and hasattr(props, "inputs"):     # 5.x [5.3]
+    if props is not None and hasattr(props, "inputs"):  # 5.x [5.3]
         getattr(props.inputs, item.identifier).value = value
-    else:                                                   # 4.x [untested]
+    else:  # 4.x [untested]
         mod[item.identifier] = value
     mod.id_data.update_tag()
 ```

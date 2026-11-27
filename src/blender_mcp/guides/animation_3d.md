@@ -40,13 +40,15 @@ topic; 2D/Grease Pencil and motion-graphics guides cover those styles.
 
 ```python
 from bpy_extras import anim_utils
-ob.keyframe_insert("location", index=2, frame=1)   # works in every version
+
+ob.keyframe_insert("location", index=2, frame=1)  # works in every version
 ad = ob.animation_data
 cb = anim_utils.action_get_channelbag_for_slot(ad.action, ad.action_slot)
 fc = cb.fcurves.find("location", index=2)
 for k in fc.keyframe_points:
-    k.interpolation = "BEZIER"; k.easing = "EASE_IN_OUT"
-fc.modifiers.new("CYCLES")          # loop the curve
+    k.interpolation = "BEZIER"
+    k.easing = "EASE_IN_OUT"
+fc.modifiers.new("CYCLES")  # loop the curve
 ```
 
   In 3.6-4.3 use `ad.action.fcurves.find(...)` [untested]. Write code that tries the channel

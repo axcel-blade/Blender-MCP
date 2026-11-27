@@ -44,12 +44,18 @@ Props, environment pieces, vehicles or characters for Unity, Unreal, Godot or th
 
 ```python
 # [5.3] selected objects, modifiers applied on export
-bpy.ops.export_scene.gltf(filepath=p + ".glb", export_format="GLB",
-                          use_selection=True, export_apply=True)
-bpy.ops.export_scene.fbx(filepath=p + ".fbx", use_selection=True,
-                         apply_scale_options="FBX_SCALE_UNITS",
-                         axis_forward="-Z", axis_up="Y",
-                         add_leaf_bones=False, mesh_smooth_type="FACE")
+bpy.ops.export_scene.gltf(
+    filepath=p + ".glb", export_format="GLB", use_selection=True, export_apply=True
+)
+bpy.ops.export_scene.fbx(
+    filepath=p + ".fbx",
+    use_selection=True,
+    apply_scale_options="FBX_SCALE_UNITS",
+    axis_forward="-Z",
+    axis_up="Y",
+    add_leaf_bones=False,
+    mesh_smooth_type="FACE",
+)
 ```
 
 - glTF `export_format` choices are filled in at run time (GLB, GLTF_SEPARATE); don't read

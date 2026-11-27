@@ -45,21 +45,31 @@ and baking procedural materials, lighting (AO) or high-poly detail into image te
 
 ```python
 # [5.3] unwrap, create a target image, bake AO, save
-with bpy.context.temp_override(active_object=ob, object=ob, selected_objects=[ob],
-                               selected_editable_objects=[ob]):
-    bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
+with bpy.context.temp_override(
+    active_object=ob, object=ob, selected_objects=[ob], selected_editable_objects=[ob]
+):
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.uv.smart_project(angle_limit=1.15192, island_margin=0.03)  # 66 degrees
     bpy.ops.object.mode_set(mode="OBJECT")
 img = bpy.data.images.new(ob.name + "_AO", 1024, 1024)
-nt = mat.node_tree; tex = nt.nodes.new("ShaderNodeTexImage"); tex.image = img
-for n in nt.nodes: n.select = False
-tex.select = True; nt.nodes.active = tex          # the bake writes into the active node
-scene.render.engine = "CYCLES"; scene.cycles.samples = 16
-scene.render.bake.margin = 8                      # px of padding around islands
-with bpy.context.temp_override(active_object=ob, object=ob, selected_objects=[ob],
-                               selected_editable_objects=[ob]):
+nt = mat.node_tree
+tex = nt.nodes.new("ShaderNodeTexImage")
+tex.image = img
+for n in nt.nodes:
+    n.select = False
+tex.select = True
+nt.nodes.active = tex  # the bake writes into the active node
+scene.render.engine = "CYCLES"
+scene.cycles.samples = 16
+scene.render.bake.margin = 8  # px of padding around islands
+with bpy.context.temp_override(
+    active_object=ob, object=ob, selected_objects=[ob], selected_editable_objects=[ob]
+):
     bpy.ops.object.bake(type="AO")
-img.filepath_raw = path; img.file_format = "PNG"; img.save()
+img.filepath_raw = path
+img.file_format = "PNG"
+img.save()
 ```
 
 - Tested [5.3]: a cube on a floor baked to the expected map (black underside, white top,

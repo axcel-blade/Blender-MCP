@@ -37,27 +37,41 @@ and time series as animation.
 ```python
 # [5.3] surface from data, values as an attribute, colour-mapped in the shader
 import numpy as np, bmesh
-me = bpy.data.meshes.new("Surface"); bm = bmesh.new()
-bmesh.ops.create_grid(bm, x_segments=80, y_segments=80, size=2); bm.to_mesh(me); bm.free()
-n = len(me.vertices); co = np.empty(n * 3, dtype=np.float32)
-me.vertices.foreach_get("co", co); co = co.reshape(n, 3)
+
+me = bpy.data.meshes.new("Surface")
+bm = bmesh.new()
+bmesh.ops.create_grid(bm, x_segments=80, y_segments=80, size=2)
+bm.to_mesh(me)
+bm.free()
+n = len(me.vertices)
+co = np.empty(n * 3, dtype=np.float32)
+me.vertices.foreach_get("co", co)
+co = co.reshape(n, 3)
 z = (np.sin(co[:, 0] * 2) * np.cos(co[:, 1] * 2) * 0.5).astype(np.float32)
-co[:, 2] = z; me.vertices.foreach_set("co", co.ravel()); me.update()
+co[:, 2] = z
+me.vertices.foreach_set("co", co.ravel())
+me.update()
 me.attributes.new("value", "FLOAT", "POINT").data.foreach_set("value", z)
 
-nt = mat.node_tree; bsdf = next(x for x in nt.nodes if x.type == "BSDF_PRINCIPLED")
-attr = nt.nodes.new("ShaderNodeAttribute"); attr.attribute_name = "value"   # GEOMETRY type
+nt = mat.node_tree
+bsdf = next(x for x in nt.nodes if x.type == "BSDF_PRINCIPLED")
+attr = nt.nodes.new("ShaderNodeAttribute")
+attr.attribute_name = "value"  # GEOMETRY type
 rng = nt.nodes.new("ShaderNodeMapRange")
-rng.inputs["From Min"].default_value = -0.5; rng.inputs["From Max"].default_value = 0.5
-ramp = nt.nodes.new("ShaderNodeValToRGB"); el = ramp.color_ramp.elements
-el[0].color = (0.267, 0.005, 0.329, 1); el[1].color = (0.993, 0.906, 0.144, 1)
-el.new(0.5).color = (0.128, 0.567, 0.551, 1)                               # viridis
+rng.inputs["From Min"].default_value = -0.5
+rng.inputs["From Max"].default_value = 0.5
+ramp = nt.nodes.new("ShaderNodeValToRGB")
+el = ramp.color_ramp.elements
+el[0].color = (0.267, 0.005, 0.329, 1)
+el[1].color = (0.993, 0.906, 0.144, 1)
+el.new(0.5).color = (0.128, 0.567, 0.551, 1)  # viridis
 nt.links.new(attr.outputs["Fac"], rng.inputs["Value"])
 nt.links.new(rng.outputs["Result"], ramp.inputs["Fac"])
 nt.links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
 
 # [5.3] point cloud object: resize, then write positions and radii
-pc = bpy.data.pointclouds.new("Points"); pc.resize(len(pts))
+pc = bpy.data.pointclouds.new("Points")
+pc.resize(len(pts))
 pc.attributes["position"].data.foreach_set("vector", pts.astype(np.float32).ravel())
 rad = pc.attributes.get("radius") or pc.attributes.new("radius", "FLOAT", "POINT")
 rad.data.foreach_set("value", np.full(len(pts), 0.03, dtype=np.float32))

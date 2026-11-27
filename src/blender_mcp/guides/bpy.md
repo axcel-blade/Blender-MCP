@@ -52,8 +52,9 @@ def batch_prefix(objects, prefix, apply=False):
             bpy.data.objects[old].name = new
     return {"apply": apply, "count": len(plan), "changes": plan[:50]}
 
+
 targets = [o for o in bpy.data.objects if o.type == "MESH"]
-result = batch_prefix(targets, "SM_")          # returns the plan, renames nothing
+result = batch_prefix(targets, "SM_")  # returns the plan, renames nothing
 ```
 
 - Bulk data [5.3]: `mesh.vertices.foreach_get("co", buf)` / `foreach_set` with a numpy

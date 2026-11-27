@@ -42,15 +42,23 @@ Product:
 ```python
 # [5.3] window portal, soft key light, straight-verticals camera, product shadow catcher
 portal = bpy.data.lights.new("Portal_Window", "AREA")
-portal.shape = "RECTANGLE"; portal.size = 1.2; portal.size_y = 1.5
-portal.cycles.is_portal = True                     # Cycles only, emits no light itself
-key = bpy.data.lights.new("Key", "AREA"); key.shape = "DISK"; key.size = 1.5
-key.energy = 300; key.use_temperature = True; key.temperature = 5600   # Kelvin
-cam.data.lens = 20; cam.rotation_euler[0] = math.radians(90)   # level camera
-cam.data.shift_y = 0.1                             # reframe without tilting
-cam.data.dof.use_dof = True; cam.data.dof.focus_object = product
+portal.shape = "RECTANGLE"
+portal.size = 1.2
+portal.size_y = 1.5
+portal.cycles.is_portal = True  # Cycles only, emits no light itself
+key = bpy.data.lights.new("Key", "AREA")
+key.shape = "DISK"
+key.size = 1.5
+key.energy = 300
+key.use_temperature = True
+key.temperature = 5600  # Kelvin
+cam.data.lens = 20
+cam.rotation_euler[0] = math.radians(90)  # level camera
+cam.data.shift_y = 0.1  # reframe without tilting
+cam.data.dof.use_dof = True
+cam.data.dof.focus_object = product
 cam.data.dof.aperture_fstop = 4.0
-floor.is_shadow_catcher = True                     # Cycles
+floor.is_shadow_catcher = True  # Cycles
 scene.render.film_transparent = True
 ```
 

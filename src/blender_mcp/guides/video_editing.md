@@ -39,13 +39,16 @@ editorial work (many hours of footage, proxies, advanced grading) suggest a dedi
 # [5.3] 5.0+ names: sequence_editor.strips / strips_all (was sequences / sequences_all)
 se = scene.sequence_editor_create()
 a = se.strips.new_image("ShotA", "/path/f_0001.png", channel=1, frame_start=1)
-for i in range(2, 25):                       # build an image sequence
+for i in range(2, 25):  # build an image sequence
     a.elements.append(f"f_{i:04d}.png")
 b = se.strips.new_movie("ShotB", "/path/b.mp4", channel=2, frame_start=18)
-x = se.strips.new_effect("Dissolve", "CROSS", channel=3, frame_start=18,
-                         length=7, input1=a, input2=b)
+x = se.strips.new_effect(
+    "Dissolve", "CROSS", channel=3, frame_start=18, length=7, input1=a, input2=b
+)
 t = se.strips.new_effect("Title", "TEXT", channel=4, frame_start=1, length=48)
-t.text = "Hello"; t.font_size = 80; t.location = (0.5, 0.15)
+t.text = "Hello"
+t.font_size = 80
+t.location = (0.5, 0.15)
 ```
 
 - `new_movie` and `new_sound` were not run (no test footage) [untested]; their

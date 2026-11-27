@@ -37,16 +37,19 @@ Hand-drawn style animation, storyboards and animatics, 2D characters in a 3D sce
 
 ```python
 # [5.3] Grease Pencil v3 (4.3+): object type GREASEPENCIL, data bpy.data.grease_pencils
-gp = bpy.data.grease_pencils.new("Sketch")      # 4.3 only: bpy.data.grease_pencils_v3
-ob = bpy.data.objects.new("Sketch", gp); collection.objects.link(ob)
-mat = bpy.data.materials.new("Ink"); bpy.data.materials.create_gpencil_data(mat)
+gp = bpy.data.grease_pencils.new("Sketch")  # 4.3 only: bpy.data.grease_pencils_v3
+ob = bpy.data.objects.new("Sketch", gp)
+collection.objects.link(ob)
+mat = bpy.data.materials.new("Ink")
+bpy.data.materials.create_gpencil_data(mat)
 gp.materials.append(mat)
 layer = gp.layers.new("Lines")
-frame = layer.frames.new(1)                    # frame_number 1
+frame = layer.frames.new(1)  # frame_number 1
 drawing = frame.drawing
-drawing.add_strokes([4])                       # one stroke with 4 points
+drawing.add_strokes([4])  # one stroke with 4 points
 for i, pt in enumerate(drawing.strokes[0].points):
-    pt.position = (i * 0.2, 0, 0); pt.radius = 0.02
+    pt.position = (i * 0.2, 0, 0)
+    pt.radius = 0.02
 ```
 
 - Modifier types [5.3] are prefixed `GREASE_PENCIL_` (BUILD, NOISE, TINT, OPACITY, ARRAY,

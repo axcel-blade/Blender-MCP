@@ -39,18 +39,28 @@ using an armature.
 
 ```python
 # [5.3] build bones in Edit Mode, constraints in Pose Mode
-arm = bpy.data.armatures.new("Rig"); rig = bpy.data.objects.new("Rig", arm)
-collection.objects.link(rig); view_layer.objects.active = rig
+arm = bpy.data.armatures.new("Rig")
+rig = bpy.data.objects.new("Rig", arm)
+collection.objects.link(rig)
+view_layer.objects.active = rig
 bpy.ops.object.mode_set(mode="EDIT")
-root = arm.edit_bones.new("root"); root.head = (0, 0, 0); root.tail = (0, 0, 0.5)
-up = arm.edit_bones.new("upper"); up.head = (0, 0, 0.5); up.tail = (0, 0, 1.0)
-up.parent = root; up.use_connect = True
+root = arm.edit_bones.new("root")
+root.head = (0, 0, 0)
+root.tail = (0, 0, 0.5)
+up = arm.edit_bones.new("upper")
+up.head = (0, 0, 0.5)
+up.tail = (0, 0, 1.0)
+up.parent = root
+up.use_connect = True
 bpy.ops.object.mode_set(mode="POSE")
-ik = rig.pose.bones["lower"].constraints.new("IK"); ik.chain_count = 2
+ik = rig.pose.bones["lower"].constraints.new("IK")
+ik.chain_count = 2
 bpy.ops.object.mode_set(mode="OBJECT")
 # skin: select mesh, then the rig, rig active
-mesh_ob.select_set(True); rig.select_set(True); view_layer.objects.active = rig
-bpy.ops.object.parent_set(type="ARMATURE_AUTO")   # adds vertex groups + Armature modifier
+mesh_ob.select_set(True)
+rig.select_set(True)
+view_layer.objects.active = rig
+bpy.ops.object.parent_set(type="ARMATURE_AUTO")  # adds vertex groups + Armature modifier
 ```
 
 - Bone collections [5.3, 4.0+]: `bc = arm.collections.new("Deform"); bc.assign(arm.bones["upper"])`.

@@ -36,17 +36,27 @@ call-outs, abstract loops, data-driven animation, social media clips and lower t
 
 ```python
 # [5.3] extruded centred title and a line that draws on over 30 frames
-cu = bpy.data.curves.new("Title", "FONT"); cu.body = "MOTION"
-cu.extrude = 0.05; cu.bevel_depth = 0.01; cu.align_x = "CENTER"; cu.align_y = "CENTER"
-title = bpy.data.objects.new("Title", cu); collection.objects.link(title)
+cu = bpy.data.curves.new("Title", "FONT")
+cu.body = "MOTION"
+cu.extrude = 0.05
+cu.bevel_depth = 0.01
+cu.align_x = "CENTER"
+cu.align_y = "CENTER"
+title = bpy.data.objects.new("Title", cu)
+collection.objects.link(title)
 
-path = bpy.data.curves.new("Line", "CURVE"); path.dimensions = "3D"
-sp = path.splines.new("BEZIER"); sp.bezier_points.add(2)
+path = bpy.data.curves.new("Line", "CURVE")
+path.dimensions = "3D"
+sp = path.splines.new("BEZIER")
+sp.bezier_points.add(2)
 for i, bp in enumerate(sp.bezier_points):
-    bp.co = (i, 0, 0); bp.handle_left_type = bp.handle_right_type = "AUTO"
+    bp.co = (i, 0, 0)
+    bp.handle_left_type = bp.handle_right_type = "AUTO"
 path.bevel_depth = 0.02
-path.bevel_factor_end = 0.0; path.keyframe_insert("bevel_factor_end", frame=1)
-path.bevel_factor_end = 1.0; path.keyframe_insert("bevel_factor_end", frame=30)
+path.bevel_factor_end = 0.0
+path.keyframe_insert("bevel_factor_end", frame=1)
+path.bevel_factor_end = 1.0
+path.keyframe_insert("bevel_factor_end", frame=30)
 ```
 
   Tested [5.3]: at frame 15 `bevel_factor_end` evaluates to 0.474 (Bezier ease).

@@ -36,7 +36,7 @@ for ob, kind in ((box, "ACTIVE"), (ground, "PASSIVE")):
         bpy.ops.rigidbody.object_add(type=kind)
 world = scene.rigidbody_world
 world.point_cache.frame_end = 120
-for f in range(1, 121):          # step frames in order to simulate (or bake)
+for f in range(1, 121):  # step frames in order to simulate (or bake)
     scene.frame_set(f)
 ```
 

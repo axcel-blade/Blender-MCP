@@ -165,22 +165,25 @@ The compositor API changed in 5.0:
 
 ```python
 sc = bpy.context.scene
-if "compositing_node_group" in bpy.types.Scene.bl_rna.properties:   # 5.x
+if "compositing_node_group" in bpy.types.Scene.bl_rna.properties:  # 5.x
     tree = bpy.data.node_groups.new("Comp", "CompositorNodeTree")
     tree.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
-    rl = tree.nodes.new("CompositorNodeRLayers"); out = tree.nodes.new("NodeGroupOutput")
+    rl = tree.nodes.new("CompositorNodeRLayers")
+    out = tree.nodes.new("NodeGroupOutput")
     sc.compositing_node_group = tree
     out_socket = out.inputs[0]
-else:                                                                # 3.6-4.x [untested]
-    sc.use_nodes = True; tree = sc.node_tree
+else:  # 3.6-4.x [untested]
+    sc.use_nodes = True
+    tree = sc.node_tree
     rl = next(n for n in tree.nodes if n.type == "R_LAYERS")
     out_socket = next(n for n in tree.nodes if n.type == "COMPOSITE").inputs[0]
 glare = tree.nodes.new("CompositorNodeGlare")
-if "Type" in glare.inputs:                                           # 5.x
+if "Type" in glare.inputs:  # 5.x
     glare.inputs["Type"].default_value = "Fog Glow"
     glare.inputs["Threshold"].default_value = 0.8
-else:                                                                # [untested]
-    glare.glare_type = "FOG_GLOW"; glare.threshold = 0.8
+else:  # [untested]
+    glare.glare_type = "FOG_GLOW"
+    glare.threshold = 0.8
 tree.links.new(rl.outputs["Image"], glare.inputs["Image"])
 tree.links.new(glare.outputs["Image"], out_socket)
 ```

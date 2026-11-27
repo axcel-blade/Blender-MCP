@@ -42,14 +42,19 @@ win = bpy.context.window_manager.windows[0]
 area = max(win.screen.areas, key=lambda a: a.width * a.height)
 old = area.ui_type
 try:
-    area.type = "CLIP_EDITOR"; area.spaces.active.clip = clip
+    area.type = "CLIP_EDITOR"
+    area.spaces.active.clip = clip
     region = next(r for r in area.regions if r.type == "WINDOW")
     tr = clip.tracking
-    tr.camera.sensor_width = 36; tr.camera.focal_length = 35
-    tr.settings.default_pattern_size = 21; tr.settings.default_search_size = 71
-    tr.objects[0].keyframe_a = 1; tr.objects[0].keyframe_b = 20
-    with bpy.context.temp_override(window=win, screen=win.screen, area=area,
-                                   region=region, edit_movieclip=clip):
+    tr.camera.sensor_width = 36
+    tr.camera.focal_length = 35
+    tr.settings.default_pattern_size = 21
+    tr.settings.default_search_size = 71
+    tr.objects[0].keyframe_a = 1
+    tr.objects[0].keyframe_b = 20
+    with bpy.context.temp_override(
+        window=win, screen=win.screen, area=area, region=region, edit_movieclip=clip
+    ):
         scene.frame_set(clip.frame_start)
         bpy.ops.clip.detect_features(threshold=0.1, min_distance=40, margin=20)
         bpy.ops.clip.track_markers(backwards=False, sequence=True)
@@ -57,7 +62,7 @@ try:
         bpy.ops.clip.select_all(action="SELECT")
         bpy.ops.clip.clean_tracks(frames=20, error=2.0, action="DELETE_TRACK")
         bpy.ops.clip.solve_camera()
-        bpy.ops.clip.setup_tracking_scene()   # adds a CAMERA_SOLVER constraint
+        bpy.ops.clip.setup_tracking_scene()  # adds a CAMERA_SOLVER constraint
 finally:
     area.ui_type = old
 error = tr.reconstruction.average_error if tr.reconstruction.is_valid else None

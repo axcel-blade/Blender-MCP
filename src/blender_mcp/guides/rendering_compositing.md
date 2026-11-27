@@ -35,19 +35,24 @@ field, grading, masks, Cryptomatte).
 # [5.3] Cycles with denoising, two passes, H.264 video output
 try:
     scene.render.engine = "CYCLES"
-except TypeError as exc:                 # message lists the engines available
+except TypeError as exc:  # message lists the engines available
     raise ValueError(f"Cycles unavailable: {exc}")
 cy = scene.cycles
-cy.samples = 256; cy.use_adaptive_sampling = True; cy.adaptive_threshold = 0.02
-cy.use_denoising = True; cy.sample_clamp_indirect = 10
+cy.samples = 256
+cy.use_adaptive_sampling = True
+cy.adaptive_threshold = 0.02
+cy.use_denoising = True
+cy.sample_clamp_indirect = 10
 vl = scene.view_layers[0]
-vl.use_pass_mist = True; vl.use_pass_cryptomatte_object = True
+vl.use_pass_mist = True
+vl.use_pass_cryptomatte_object = True
 ims = scene.render.image_settings
-if "media_type" in ims.bl_rna.properties:   # 5.0+
+if "media_type" in ims.bl_rna.properties:  # 5.0+
     ims.media_type = "VIDEO"
-else:                                       # [untested]
+else:  # [untested]
     ims.file_format = "FFMPEG"
-scene.render.ffmpeg.format = "MPEG4"; scene.render.ffmpeg.codec = "H264"
+scene.render.ffmpeg.format = "MPEG4"
+scene.render.ffmpeg.codec = "H264"
 scene.render.ffmpeg.constant_rate_factor = "HIGH"
 ```
 

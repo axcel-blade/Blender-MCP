@@ -35,9 +35,13 @@ USDZ/Reality Composer), and e-commerce product viewers.
 ```python
 # [5.3] web/Android GLB with Draco mesh compression, and Apple USDZ
 with bpy.context.temp_override(selected_objects=[ob], active_object=ob, object=ob):
-    bpy.ops.export_scene.gltf(filepath=base + ".glb", export_format="GLB",
-                              use_selection=True, export_apply=True,
-                              export_draco_mesh_compression_enable=True)
+    bpy.ops.export_scene.gltf(
+        filepath=base + ".glb",
+        export_format="GLB",
+        use_selection=True,
+        export_apply=True,
+        export_draco_mesh_compression_enable=True,
+    )
     bpy.ops.wm.usd_export(filepath=base + ".usdz", selected_objects_only=True)
 ```
 
