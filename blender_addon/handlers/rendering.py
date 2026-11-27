@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 from pathlib import Path
 from typing import Any
 
@@ -78,65 +79,147 @@ def set_output_path(params: dict[str, Any]):
     return {"filepath": bpy.context.scene.render.filepath}
 
 
+# Scene settings a render may change; snapshotted before and restored after.
+_RENDER_ATTRS = ("engine", "filepath", "resolution_percentage", "use_compositing")
+_IMAGE_ATTRS = ("file_format", "color_mode", "color_depth")
+
+
+def snapshot_render_settings(scene: Any) -> dict[str, Any]:
+    """Record every setting a render handler may touch, so it can be put back."""
+    snap: dict[str, Any] = {"camera": scene.camera, "render": {}, "image": {}, "samples": {}}
+    for attr in _RENDER_ATTRS:
+        if hasattr(scene.render, attr):
+            snap["render"][attr] = getattr(scene.render, attr)
+    image_settings = scene.render.image_settings
+    for attr in _IMAGE_ATTRS:
+        if hasattr(image_settings, attr):
+            snap["image"][attr] = getattr(image_settings, attr)
+    if hasattr(scene, "cycles") and hasattr(scene.cycles, "samples"):
+        snap["samples"]["cycles"] = scene.cycles.samples
+    if hasattr(scene, "eevee") and hasattr(scene.eevee, "taa_render_samples"):
+        snap["samples"]["eevee"] = scene.eevee.taa_render_samples
+    return snap
+
+
+def restore_render_settings(scene: Any, snap: dict[str, Any]) -> None:
+    """Put back what ``snapshot_render_settings`` recorded. Never raises."""
+    # file_format first: it resets color_mode/color_depth to the format's defaults.
+    for attr in _IMAGE_ATTRS:
+        if attr in snap["image"]:
+            with contextlib.suppress(TypeError, ValueError, AttributeError):
+                setattr(scene.render.image_settings, attr, snap["image"][attr])
+    for attr, value in snap["render"].items():
+        with contextlib.suppress(TypeError, ValueError, AttributeError):
+            setattr(scene.render, attr, value)
+    if "cycles" in snap["samples"]:
+        scene.cycles.samples = snap["samples"]["cycles"]
+    if "eevee" in snap["samples"]:
+        scene.eevee.taa_render_samples = snap["samples"]["eevee"]
+    with contextlib.suppress(TypeError, ValueError, AttributeError, ReferenceError):
+        scene.camera = snap["camera"]
+
+
+def _set_samples(scene: Any, samples: int | None) -> None:
+    if samples is None:
+        return
+    if hasattr(scene, "cycles") and hasattr(scene.cycles, "samples"):
+        scene.cycles.samples = samples
+    if hasattr(scene, "eevee") and hasattr(scene.eevee, "taa_render_samples"):
+        scene.eevee.taa_render_samples = samples
+
+
+def _mtime(path: Path) -> int | None:
+    try:
+        return path.stat().st_mtime_ns
+    except OSError:
+        return None
+
+
+def render_still(scene: Any, out: Path, *, write_still: bool = True) -> bytes:
+    """Render the current frame and return the PNG bytes of *this* render.
+
+    Raises RuntimeError instead of ever returning an older image: with
+    ``write_still`` the file must be (re)written by this render; without it the
+    in-memory Render Result is saved to a fresh temp file.
+    """
+    import tempfile
+
+    import bpy
+
+    before = _mtime(out)
+    scene.render.filepath = str(out)
+    scene.render.image_settings.file_format = "PNG"
+    result = bpy.ops.render.render(write_still=write_still)
+    if isinstance(result, set) and "FINISHED" not in result:
+        raise RuntimeError(f"Render did not finish ({', '.join(sorted(result))}).")
+    if write_still:
+        after = _mtime(out)
+        if after is None or after == before:
+            raise RuntimeError(f"Render finished but wrote no new image to {out}.")
+        return out.read_bytes()
+    render_result = next(
+        (img for img in bpy.data.images if getattr(img, "type", "") == "RENDER_RESULT"), None
+    )
+    if render_result is None:
+        raise RuntimeError("Render finished but Blender has no Render Result image.")
+    fd, tmp_name = tempfile.mkstemp(prefix="blender_mcp_result_", suffix=".png")
+    import os
+
+    os.close(fd)
+    tmp = Path(tmp_name)
+    try:
+        tmp.unlink()
+        render_result.save_render(filepath=str(tmp), scene=scene)
+        if not tmp.exists():
+            raise RuntimeError("Could not read the Render Result image.")
+        return tmp.read_bytes()
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
 def _render(params: dict[str, Any], *, preview: bool = False, final: bool = False):
     import tempfile
 
     import bpy
 
     scene = bpy.context.scene
-    if params.get("engine"):
-        try:
-            scene.render.engine = params["engine"]
-        except TypeError as exc:
-            raise ValueError(str(exc)) from exc
-
-    old = {
-        "percentage": scene.render.resolution_percentage,
-        "filepath": scene.render.filepath,
-    }
-    samples = params.get("samples")
-    if preview:
-        scene.render.resolution_percentage = int(params.get("resolution_percentage") or 25)
-        samples = samples or 16
-    elif final:
-        scene.render.resolution_percentage = int(params.get("resolution_percentage") or 100)
-    else:
-        if params.get("resolution_percentage") is not None:
+    snap = snapshot_render_settings(scene)
+    _LAST_RENDER.clear()  # a failed render must not leave an older image behind
+    try:
+        if params.get("engine"):
+            try:
+                scene.render.engine = params["engine"]
+            except TypeError as exc:
+                raise ValueError(str(exc)) from exc
+        samples = params.get("samples")
+        if preview:
+            scene.render.resolution_percentage = int(params.get("resolution_percentage") or 25)
+            samples = samples or 16
+        elif final:
+            scene.render.resolution_percentage = int(params.get("resolution_percentage") or 100)
+        elif params.get("resolution_percentage") is not None:
             scene.render.resolution_percentage = int(params["resolution_percentage"])
+        samples, _, _ = _enforce_limits(samples=samples)
+        _set_samples(scene, samples)
 
-    samples, _, _ = _enforce_limits(samples=samples)
-    if samples is not None:
-        if hasattr(scene, "cycles"):
-            scene.cycles.samples = samples
-        if hasattr(scene, "eevee") and hasattr(scene.eevee, "taa_render_samples"):
-            scene.eevee.taa_render_samples = samples
-
-    out = params.get("output_path")
-    if not out:
-        out = str(Path(tempfile.gettempdir()) / "blender_mcp_render.png")
-    scene.render.filepath = out
-    scene.render.image_settings.file_format = "PNG"
-
-    bpy.ops.render.render(write_still=bool(params.get("write_still", True)))
-
-    image_b64 = None
-    if Path(out).exists():
-        image_b64 = base64.b64encode(Path(out).read_bytes()).decode("ascii")
-
-    # restore percentage/path preferences lightly
-    scene.render.resolution_percentage = old["percentage"]
+        out = params.get("output_path")
+        if not out:
+            out = str(Path(tempfile.gettempdir()) / "blender_mcp_render.png")
+        write_still = bool(params.get("write_still", True))
+        data = render_still(scene, Path(out), write_still=write_still)
+        engine = scene.render.engine
+    finally:
+        restore_render_settings(scene, snap)
 
     result = {
-        "output_path": out,
-        "engine": scene.render.engine,
+        "output_path": out if write_still else None,
+        "engine": engine,
         "preview": preview,
         "final": final,
-        "image_base64": image_b64,
+        "image_base64": base64.b64encode(data).decode("ascii"),
         "mime_type": "image/png",
     }
-    _LAST_RENDER.clear()
     _LAST_RENDER.update(result)
-    # Avoid returning huge payloads twice in history consumers — still return once
     return result
 
 

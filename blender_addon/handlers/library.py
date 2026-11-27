@@ -596,34 +596,44 @@ def load_movie_clip(params: dict[str, Any]):
     }
 
 
+@contextlib.contextmanager
 def _clip_override(clip):
+    """Yield a Clip Editor context override, putting the area back afterwards.
+
+    Uses an open Clip Editor if there is one (restoring the clip it showed), otherwise
+    borrows the largest area and restores its editor type, even if tracking fails.
+    """
     import bpy
 
-    for window in bpy.context.window_manager.windows:
-        for area in window.screen.areas:
-            if area.type == "CLIP_EDITOR":
-                area.spaces.active.clip = clip
-                region = next(r for r in area.regions if r.type == "WINDOW")
-                return {
-                    "window": window,
-                    "screen": window.screen,
-                    "area": area,
-                    "region": region,
-                    "edit_movieclip": clip,
-                }
-    # Borrow the largest area as a temporary clip editor.
-    window = bpy.context.window_manager.windows[0]
-    area = max(window.screen.areas, key=lambda a: a.width * a.height)
-    area.type = "CLIP_EDITOR"
-    area.spaces.active.clip = clip
-    region = next(r for r in area.regions if r.type == "WINDOW")
-    return {
-        "window": window,
-        "screen": window.screen,
-        "area": area,
-        "region": region,
-        "edit_movieclip": clip,
-    }
+    area = window = None
+    for win in bpy.context.window_manager.windows:
+        area = next((a for a in win.screen.areas if a.type == "CLIP_EDITOR"), None)
+        if area is not None:
+            window = win
+            break
+    borrowed = area is None
+    if borrowed:
+        window = bpy.context.window_manager.windows[0]
+        area = max(window.screen.areas, key=lambda a: a.width * a.height)
+        previous = area.ui_type
+        area.type = "CLIP_EDITOR"
+    else:
+        previous = area.spaces.active.clip
+    try:
+        area.spaces.active.clip = clip
+        region = next(r for r in area.regions if r.type == "WINDOW")
+        yield {
+            "window": window,
+            "screen": window.screen,
+            "area": area,
+            "region": region,
+            "edit_movieclip": clip,
+        }
+    finally:
+        if borrowed:
+            area.ui_type = previous
+        else:
+            area.spaces.active.clip = previous
 
 
 @command("track_camera_motion")
@@ -636,9 +646,8 @@ def track_camera_motion(params: dict[str, Any]):
         raise ValueError("clip not found; use load_movie_clip first")
     if not bpy.context.window_manager.windows:
         raise ValueError("Motion tracking needs the Blender UI (not available in background mode)")
-    override = _clip_override(clip)
     scene = bpy.context.scene
-    with bpy.context.temp_override(**override):
+    with _clip_override(clip) as override, bpy.context.temp_override(**override):
         scene.frame_set(clip.frame_start)
         bpy.ops.clip.detect_features(
             threshold=float(params.get("threshold") or 0.3),

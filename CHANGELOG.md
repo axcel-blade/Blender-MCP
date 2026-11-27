@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Google Antigravity support: the Windows, macOS, Linux and one-line installers register `blender-mcp` in `~/.gemini/config/mcp_config.json` (the app, IDE and CLI share it) when Antigravity is installed, with `timeoutSeconds: 3600` so long renders and bakes are not cut off at Antigravity's 180 s default. Manual setup is in docs/INSTALLATION.md.
+
+- `look(mode="render")`: a real render from the active or named camera with the compositor applied, so glare, colour grading, fog and volumes can be checked visually from the core profile. It honours `max_size`, the render sample/resolution limits, the `screenshots` and `rendering` tool groups and `render.max_time_seconds` (or `command_timeouts.capture_render_view`) as the client and addon timeout, restores every setting it changes, and errors clearly when there is no camera or the render fails.
+- `get_guide("cinematic")`: stylised and concept-art scenes from a reference image: matching the camera, Bezier tracks and bridges, displaced cliffs and floating islands, storm skies, volumetric fog, lightning, emissive and wet materials, rain, compositor glare and grading, with notes on API differences between Blender 3.6, 4.x and 5.x.
+- `get_guide("animation_3d")` (timing, blocking to polish, F-Curves through the 5.x action channel bag, drivers, NLA) and `get_guide("game_assets")` (budgets, UVs, baking, LODs, collision, glTF/FBX export and re-import checks). Like the cinematic guide they follow one template: when to use, inputs, workflow, tested values and code, common mistakes, a verification checklist and what needs manual work; Blender 5.3-tested details are marked and 3.6/4.x notes are marked untested.
+- `get_guide("modelling")` (hard surface modifier stacks, bmesh, voxel remesh, sculpting), `get_guide("rigging")` (armatures, bone collections, IK, automatic weights, engine export) and `get_guide("animation_2d")` (Grease Pencil v3 strokes, layers and modifiers, Line Art, with the pre-4.3 API marked untested), on the same template.
+- `get_guide("rendering_compositing")` (Cycles/EEVEE settings, passes, 5.x video output via `media_type`, compositor nodes), `get_guide("vfx_simulation")` (rigid body, cloth, Mantaflow, particles, force fields, caches) and `get_guide("motion_tracking")` (a camera solve tested end to end on rendered footage, including cleaning tracks and restoring the borrowed editor area).
+- `get_guide("video_editing")` (5.x `strips` API, `new_effect(length=...)`, transitions and titles), `get_guide("geometry_nodes")` (a tested scatter setup, and setting modifier inputs through `mod.properties.inputs` in 5.x where `mod["Socket_N"]` no longer works) and `get_guide("archviz_product")` (portals, straight verticals, studio lighting, shadow catchers, turntables).
+- `get_guide("3d_printing")` (bmesh manifold and volume checks, STL export to millimetres measured in the exported file), `get_guide("motion_graphics")` (text objects, draw-on curves, brand colours, timing) and `get_guide("xr_assets")` (USDZ and Draco GLB exports, AR budgets and scale).
+- `get_guide("scientific_viz")` (numpy `foreach_set` geometry, attributes coloured through Map Range and Color Ramp, point cloud objects, importers). The `materials` guide now covers UV unwrapping, texture painting and a tested AO bake, and the `bpy` guide covers batch work with dry runs and lists exactly what safe execution mode refuses, telling the model to explain it and never bypass it.
+- `recreate_reference` prompt: a six-stage workflow (blockout, main structures, detail, materials, sky and lighting, compositing) that renders, compares with the reference, fixes the three biggest differences and waits for feedback after each stage.
+
+### Changed
+
+- Server instructions name each guide with the requests it fits and tell the model to load only that one; they send stylised/cinematic requests to the cinematic guide and its staged workflow; photoreal requests still go to the realism guide.
+
+### Fixed
+
+- Render handlers could return an image left over from an earlier render (for example with `write_still=False`, or when the render wrote nothing). They now return only this render's image, or an error.
+- Render handlers now restore the output path, samples, engine, resolution percentage and file format afterwards, even when the render fails.
+- `capture_camera_view` with a `camera` no longer leaves that camera as the scene's active camera.
+- `track_camera_motion` no longer leaves the largest editor area turned into a Clip Editor: the borrowed area gets its editor type back (or an existing Clip Editor its previous clip), even when tracking fails.
+
 ## [1.7.0] - 2026-11-25
 
 ### Added

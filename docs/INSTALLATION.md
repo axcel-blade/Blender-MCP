@@ -37,9 +37,24 @@ The installers (Windows, macOS and Linux, one-line or local clone) also register
 | VS Code / Insiders (Copilot) | `%APPDATA%\Code\User\mcp.json` (`servers` key) | `Code/User/mcp.json` under Application Support / `~/.config` |
 | Cline, Roo Code | their VS Code extension settings files | same |
 | Gemini CLI | `%USERPROFILE%\.gemini\settings.json` | `~/.gemini/settings.json` |
+| Google Antigravity (app, IDE, CLI) | `%USERPROFILE%\.gemini\config\mcp_config.json` | `~/.gemini/config/mcp_config.json` |
 | Codex | `codex mcp add`, else `%USERPROFILE%\.codex\config.toml` | `codex mcp add`, else `~/.codex/config.toml` |
 
 A client is configured only if its folder or CLI exists; missing config files are created, and existing ones are backed up to `*.blender-mcp.bak` first. Files containing comments (JSONC) are skipped with a warning, so add the entry by hand there. Rerunning the installer is safe.
+
+Google Antigravity counts as installed when `~/.gemini/antigravity` or `~/.gemini/config` exists. Its entry also gets `"timeoutSeconds": 3600`, because Antigravity stops a tool call after 180 s by default, which is shorter than long renders, bakes and simulations. To add it by hand, put this in `mcp_config.json` (Antigravity: agent panel "…" > MCP Servers > Manage MCP Servers > View raw config), using your install path:
+
+```json
+{
+  "mcpServers": {
+    "blender-mcp": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/Blender-MCP", "blender-mcp"],
+      "timeoutSeconds": 3600
+    }
+  }
+}
+```
 
 ## Local clone install
 

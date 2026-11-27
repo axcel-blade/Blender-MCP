@@ -21,6 +21,7 @@ SLOW_COMMAND_TIMEOUTS: dict[str, float] = {
     "render_animation": 1800.0,
     "render_preview": 300.0,
     "capture_render": 300.0,
+    "capture_render_view": 300.0,
     "inspect_render": 300.0,
     "create_animation_preview": 300.0,
     "import_polyhaven_asset": 300.0,
