@@ -6,10 +6,12 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from blender_mcp.security.permissions import require_tool_group
 from blender_mcp.tools.registry import AppContext, call_blender
-from blender_mcp.utils.results import to_image_content
+from blender_mcp.utils.results import fail_from_exception, to_image_content
 
-LOOK_MODES = ("viewport", "camera", "angles", "wireframe", "material", "rendered")
+LOOK_MODES = ("viewport", "camera", "angles", "wireframe", "material", "rendered", "render")
+RENDER_LOOK_COMMAND = "capture_render_view"
 
 
 def register(mcp: FastMCP, ctx: AppContext) -> None:
@@ -21,13 +23,17 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         camera: str | None = None,
         angles: list[str] | None = None,
         max_size: int = 768,
+        samples: int | None = None,
     ) -> list[Any]:
         """See the scene. Use after every visible change, then fix what looks wrong.
 
         mode: viewport (current 3D view, solid) | material (textures/colors) |
         rendered (lights + render engine) | wireframe | camera (through the active or
         named ``camera``) | angles (several views in one call; ``angles`` defaults to
-        FRONT, RIGHT, TOP, PERSPECTIVE).
+        FRONT, RIGHT, TOP, PERSPECTIVE) | render (a real F12 render from the active or
+        named ``camera`` with the compositor applied: glare, colour grading, fog and
+        volumes as they will ship; slower, so use it to check finished stages).
+        samples: render mode only; capped by the configured render limits.
         view: FRONT, BACK, LEFT, RIGHT, TOP, BOTTOM, CAMERA (viewport modes only).
         max_size: longest image edge in px. Images stay in context, so 384-512 is enough
         for layout checks; go higher only for fine detail.
@@ -38,6 +44,8 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
                 {"success": False, "error": f"mode must be one of {', '.join(LOOK_MODES)}"}
             )
         size = max(128, min(int(max_size), ctx.settings.screenshot_max_size * 2))
+        if mode == "render":
+            return to_image_content(await _render_look(camera, size, samples))
         if mode == "camera":
             command, params = "capture_camera_view", {"camera": camera, "max_size": size}
         elif mode == "angles":
@@ -52,6 +60,26 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
             command = "capture_viewport"
             params = {"max_size": size, "view": view, "shading": shading}
         return to_image_content(await call_blender(ctx, command, params, group="screenshots"))
+
+    async def _render_look(camera: str | None, size: int, samples: int | None) -> dict:
+        settings = ctx.settings
+        try:
+            require_tool_group(settings, "rendering")
+        except Exception as exc:  # noqa: BLE001
+            return fail_from_exception(exc)
+        params: dict[str, Any] = {
+            "camera": camera,
+            "max_size": size,
+            "max_resolution": min(
+                settings.render_max_resolution_x, settings.render_max_resolution_y
+            ),
+            "max_samples": settings.render_max_samples,
+            "timeout": settings.command_timeouts.get(RENDER_LOOK_COMMAND)
+            or settings.render_max_time_seconds,
+        }
+        if samples is not None:
+            params["samples"] = max(1, min(int(samples), settings.render_max_samples))
+        return await call_blender(ctx, RENDER_LOOK_COMMAND, params, group="screenshots")
 
     @mcp.tool(name="get_viewport_screenshot")
     async def get_viewport_screenshot(

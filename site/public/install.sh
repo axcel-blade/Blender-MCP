@@ -65,12 +65,19 @@ else:
 args = ["run", "--directory", root, "blender-mcp"]
 std = {"command": "uv", "args": args}
 vsc = {"type": "stdio", "command": "uv", "args": args}
+# Google Antigravity (app, IDE, CLI): ~/.gemini/config/mcp_config.json. Its default 180 s
+# per tool call is shorter than long renders and bakes, so allow up to an hour.
+ag = {"command": "uv", "args": args, "timeoutSeconds": 3600}
+ag_home = os.path.join(home, ".gemini")
+if os.path.isdir(os.path.join(ag_home, "antigravity")) or os.path.isdir(os.path.join(ag_home, "config")):
+    os.makedirs(os.path.join(ag_home, "config"), exist_ok=True)
 ext = os.path.join("User", "globalStorage")
 targets = [
     (os.path.join(home, ".cursor", "mcp.json"), "mcpServers", std),
     (os.path.join(appdata, "Claude", "claude_desktop_config.json"), "mcpServers", std),
     (os.path.join(home, ".codeium", "windsurf", "mcp_config.json"), "mcpServers", std),
     (os.path.join(home, ".gemini", "settings.json"), "mcpServers", std),
+    (os.path.join(home, ".gemini", "config", "mcp_config.json"), "mcpServers", ag),
     (os.path.join(appdata, "Code", ext, "saoudrizwan.claude-dev", "settings", "cline_mcp_settings.json"), "mcpServers", std),
     (os.path.join(appdata, "Code", ext, "rooveterinaryinc.roo-cline", "settings", "mcp_settings.json"), "mcpServers", std),
     (os.path.join(appdata, "Code", "User", "mcp.json"), "servers", vsc),
