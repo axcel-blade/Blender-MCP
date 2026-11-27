@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-27
+
 ### Added
 
 - Google Antigravity support: the Windows, macOS, Linux and one-line installers register `blender-mcp` in `~/.gemini/config/mcp_config.json` (the app, IDE and CLI share it) when Antigravity is installed, with `timeoutSeconds: 3600` so long renders and bakes are not cut off at Antigravity's 180 s default. Manual setup is in docs/INSTALLATION.md.
