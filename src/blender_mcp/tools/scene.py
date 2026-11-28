@@ -12,9 +12,17 @@ from blender_mcp.tools.registry import AppContext, call_blender
 def register(mcp: FastMCP, ctx: AppContext) -> None:
 
     @mcp.tool(name="get_scene_info")
-    async def get_scene_info() -> dict[str, Any]:
-        """Return detailed information about the current Blender scene."""
-        return await call_blender(ctx, "get_scene_info", {}, group="scene")
+    async def get_scene_info(limit: int = 50, detail: bool = False) -> dict[str, Any]:
+        """Scene overview: frame range, engine, camera and a compact object list.
+
+        Each object lists name, type, location and only non-default fields (rotation,
+        scale, parent, materials, modifiers, hidden). ``limit`` caps the objects listed
+        (default 50); ``detail=True`` returns full per-object fields. For one object's
+        full data use get_object_info.
+        """
+        return await call_blender(
+            ctx, "get_scene_info", {"limit": limit, "detail": detail}, group="scene"
+        )
 
     @mcp.tool(name="get_scene_summary")
     async def get_scene_summary() -> dict[str, Any]:
