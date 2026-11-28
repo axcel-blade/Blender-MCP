@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-28
+
+### Added
+
+- `get_scene_info(limit=50, detail=False)`: `limit` caps how many objects are listed (with a note when more exist) and `detail=True` returns the previous full per-object fields.
+
+### Changed
+
+- Lower token use. `get_scene_info` lists each object compactly by default (name, type, rounded location and only non-default rotation, scale, parent, materials, modifiers and hidden flags). `look` defaults to `max_size=512`, is capped at `screenshots.default_max_size` instead of twice it, and captures each view in `angles` mode at half size.
+- `execute_blender_code` clips stdout, stderr and tracebacks to 4000 characters and the result to 8000 (head and tail kept, with a note), drops empty fields and rounds timings. `preview_only` reports the code length instead of echoing the code back.
+
 ## [1.8.0] - 2026-11-27
 
 ### Added
