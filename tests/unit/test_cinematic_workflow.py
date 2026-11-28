@@ -61,7 +61,7 @@ async def test_look_render_clamps_max_size_and_honours_timeout_override():
     fake, bridge = _register_look(settings)
     await fake.look(mode="render", max_size=10_000)
     _, params = bridge.send_command.await_args.args
-    assert params["max_size"] == 512
+    assert params["max_size"] == 256
     assert params["timeout"] == 900
     assert "samples" not in params
 

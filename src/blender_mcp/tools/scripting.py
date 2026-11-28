@@ -8,7 +8,7 @@ from mcp.server.fastmcp import FastMCP
 
 from blender_mcp.security.script_policy import ScriptPolicy
 from blender_mcp.tools.registry import AppContext, call_blender
-from blender_mcp.utils.results import fail_from_exception, ok
+from blender_mcp.utils.results import compact_script_result, fail_from_exception, ok
 
 
 def register(mcp: FastMCP, ctx: AppContext) -> None:
@@ -27,6 +27,8 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         bpy, mathutils, C (bpy.context) and D (bpy.data) are preloaded. Returns the
         ``result`` variable if set, else the last expression's value, plus stdout and a
         traceback on error. Return dicts/lists. Batch related steps into one script.
+        Return only what you need: stdout/traceback are clipped to 4000 chars and the
+        result to 8000 chars (head and tail kept).
 
         ``timeout``: seconds to allow (default 60, max 3600). Raise it for long work such
         as bakes or heavy booleans. A script that times out before starting is cancelled;
@@ -48,7 +50,7 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
                 return ok(
                     {
                         "preview_only": True,
-                        "code": code,
+                        "code_chars": len(code),
                         "warning": policy.warning_text(),
                         "mode": str(policy.mode),
                     }
@@ -59,6 +61,8 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
                 "preview_only": False,
                 "timeout": timeout,
             }
-            return await call_blender(ctx, "execute_blender_code", params, group="scripting")
+            return compact_script_result(
+                await call_blender(ctx, "execute_blender_code", params, group="scripting")
+            )
         except Exception as exc:  # noqa: BLE001
             return fail_from_exception(exc)
