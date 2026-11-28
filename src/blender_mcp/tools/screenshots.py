@@ -22,7 +22,7 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         view: str | None = None,
         camera: str | None = None,
         angles: list[str] | None = None,
-        max_size: int = 768,
+        max_size: int = 512,
         samples: int | None = None,
     ) -> list[Any]:
         """See the scene. Use after every visible change, then fix what looks wrong.
@@ -35,21 +35,26 @@ def register(mcp: FastMCP, ctx: AppContext) -> None:
         volumes as they will ship; slower, so use it to check finished stages).
         samples: render mode only; capped by the configured render limits.
         view: FRONT, BACK, LEFT, RIGHT, TOP, BOTTOM, CAMERA (viewport modes only).
-        max_size: longest image edge in px. Images stay in context, so 384-512 is enough
-        for layout checks; go higher only for fine detail.
+        max_size: longest image edge in px (default 512, capped by the configured
+        screenshot size). Images stay in context and are re-sent every turn, so keep
+        384-512 for layout checks; go higher only for fine detail. In angles mode each
+        view is captured at half this size.
         """
         mode = (mode or "viewport").lower()
         if mode not in LOOK_MODES:
             return to_image_content(
                 {"success": False, "error": f"mode must be one of {', '.join(LOOK_MODES)}"}
             )
-        size = max(128, min(int(max_size), ctx.settings.screenshot_max_size * 2))
+        size = max(128, min(int(max_size), ctx.settings.screenshot_max_size))
         if mode == "render":
             return to_image_content(await _render_look(camera, size, samples))
         if mode == "camera":
             command, params = "capture_camera_view", {"camera": camera, "max_size": size}
         elif mode == "angles":
-            command, params = "capture_multiple_angles", {"angles": angles, "max_size": size}
+            command, params = (
+                "capture_multiple_angles",
+                {"angles": angles, "max_size": max(128, size // 2)},
+            )
         else:
             shading = {
                 "viewport": None,

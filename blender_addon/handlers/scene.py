@@ -8,15 +8,53 @@ from ..utils.objects import get_object, serialize_object
 from . import command
 
 
+def _rounded(values, digits: int = 3) -> list[float]:
+    return [round(float(v), digits) for v in values]
+
+
+def _compact_object(obj) -> dict[str, Any]:
+    """Short per-object entry: only fields that differ from Blender's defaults.
+
+    get_scene_info is called at the start of most sessions and its reply stays in the
+    model's context, so it lists the essentials and leaves full detail to get_object_info.
+    """
+    entry: dict[str, Any] = {"name": obj.name, "type": obj.type}
+    entry["location"] = _rounded(obj.location)
+    if any(abs(v) > 1e-6 for v in obj.rotation_euler):
+        entry["rotation_euler"] = _rounded(obj.rotation_euler)
+    if any(abs(v - 1.0) > 1e-6 for v in obj.scale):
+        entry["scale"] = _rounded(obj.scale)
+    if any(abs(v) > 1e-6 for v in obj.dimensions):
+        entry["dimensions"] = _rounded(obj.dimensions)
+    if obj.parent:
+        entry["parent"] = obj.parent.name
+    if obj.type == "MESH":
+        mats = [slot.material.name for slot in obj.material_slots if slot.material]
+        if mats:
+            entry["materials"] = mats
+    mods = [m.name for m in getattr(obj, "modifiers", [])]
+    if mods:
+        entry["modifiers"] = mods
+    if obj.hide_viewport:
+        entry["hidden_viewport"] = True
+    if obj.hide_render:
+        entry["hidden_render"] = True
+    return entry
+
+
 @command("get_scene_info")
 def get_scene_info(params: dict[str, Any]) -> dict[str, Any]:
     import bpy
 
     scene = bpy.context.scene
-    objects = [serialize_object(o) for o in scene.objects]
-    return {
+    limit = max(0, int(params.get("limit") or 50))
+    detail = bool(params.get("detail"))
+    serialize = serialize_object if detail else _compact_object
+    all_objects = list(scene.objects)
+    objects = [serialize(o) for o in all_objects[:limit]]
+    info: dict[str, Any] = {
         "name": scene.name,
-        "object_count": len(objects),
+        "object_count": len(all_objects),
         "objects": objects,
         "frame_current": scene.frame_current,
         "frame_start": scene.frame_start,
@@ -25,6 +63,12 @@ def get_scene_info(params: dict[str, Any]) -> dict[str, Any]:
         "unit_system": scene.unit_settings.system,
         "active_camera": scene.camera.name if scene.camera else None,
     }
+    if len(all_objects) > limit:
+        info["truncated"] = (
+            f"Listed {limit} of {len(all_objects)} objects. Use search_scene, "
+            "get_objects(offset=...) or a higher limit for the rest."
+        )
+    return info
 
 
 @command("get_scene_summary")
